@@ -1,7 +1,7 @@
 <resources>
 
     <style name="Theme.JoystickApp"
-        parent="Theme.Material3.DayNight.NoActionBar">
+        parent="Theme.AppCompat.Light.NoActionBar">
 
         <!-- THIS LINE IS CRITICAL -->
         <item name="android:windowBackground">@android:color/white</item>
