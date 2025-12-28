@@ -15,11 +15,10 @@ android {
     }
 
     buildTypes {
-        release {
-            minifyEnabled false
+        debug {
+            debuggable true
         }
     }
 }
 
-dependencies {
-}
+dependencies {}
