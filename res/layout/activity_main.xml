@@ -1,15 +1,14 @@
-<FrameLayout
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="48dp"
-    android:paddingBottom="48dp"
-    android:background="#E8F5E9">
+    android:background="#EEEEEE">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Joystick App is running"
+        android:text="Joystick UI loads"
         android:textSize="22sp"
-        android:textColor="#000"
+        android:textColor="#000000"
         android:layout_gravity="center"/>
 </FrameLayout>
