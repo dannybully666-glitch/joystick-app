@@ -3,7 +3,7 @@
     <application
         android:label="JoystickApp"
         android:allowBackup="true"
-        android:theme="@style/Theme.JoystickApp">
+        android:theme="@style/Theme.JoystickApp"
 
         <activity
             android:name=".MainActivity"
