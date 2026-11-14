@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0f0f">
+<title>Penguinz0</title>
+<style>
+:root{color-scheme:dark;--bg:#0f0f0f;--surface:#181818;--surface2:#272727;--text:#f1f1f1;--muted:#aaa;--line:#303030}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-width:0;max-width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font:14px Roboto,Arial,system-ui,sans-serif}
+html{scroll-behavior:smooth}
+body{padding-bottom:76px}
+button,input,select{font:inherit;color:inherit}button{border:0;cursor:pointer}
+.topbar{height:58px;position:sticky;top:0;z-index:20;background:#0f0f0f;display:flex;align-items:center;gap:13px;padding:0 16px;border-bottom:1px solid #202020}
+.logo{width:34px;height:34px;border-radius:50%;background:#e62117;display:grid;place-items:center;font-size:19px;font-weight:900;flex:none}
+.brand{font-size:19px;font-weight:800;letter-spacing:-.5px;white-space:nowrap}.brand span{font-size:10px;color:#aaa;vertical-align:top;margin-left:3px}
+.searchwrap{margin-left:auto;display:flex;max-width:560px;width:100%;height:40px;min-width:0}
+.searchwrap input{min-width:0;flex:1;background:#121212;border:1px solid #333;border-radius:22px 0 0 22px;padding:0 16px;outline:none}
+.searchwrap input:focus{border-color:#3d75bd}.searchwrap button{width:54px;flex:none;background:#282828;border:1px solid #333;border-left:0;border-radius:0 22px 22px 0;font-size:18px}
+.iconbtn{background:transparent;color:#eee;font-size:21px;width:38px;height:38px;border-radius:50%}
+.chips{position:sticky;top:58px;z-index:15;background:#0f0f0f;display:flex;gap:9px;overflow-x:auto;padding:11px 16px;border-bottom:1px solid #202020;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}.chip{white-space:nowrap;border-radius:8px;background:#272727;padding:8px 13px;font-weight:600;font-size:13px}.chip.active{background:#f1f1f1;color:#111}
+main{width:100%;max-width:1280px;margin:0 auto;padding:16px;min-width:0}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:8px 0 15px;gap:10px}.sectionhead h2{font-size:20px;margin:0;letter-spacing:-.3px}.subtle{color:var(--muted);font-size:12px}
+.feed{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 16px}
+.video-card{min-width:0;cursor:pointer}.thumbwrap{position:relative;aspect-ratio:16/9;background:#202020;border-radius:13px;overflow:hidden}.thumb{width:100%;height:100%;object-fit:cover;display:block}
+.video-info{display:flex;gap:11px;padding-top:11px}.avatar{width:36px;height:36px;border-radius:50%;background:#e62117;display:grid;place-items:center;flex:none;font-weight:900}
+.video-copy{min-width:0;flex:1}.video-title{font-size:15px;font-weight:650;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.video-meta{font-size:12px;color:var(--muted);line-height:1.55;margin-top:5px}.more{background:transparent;color:#aaa;font-size:19px;padding:0 4px;align-self:flex-start}
+#playerView{display:none;margin:0 0 24px;width:100%;max-width:none;min-width:0}
+.playerframe{position:relative;width:100%;aspect-ratio:16/9;background:transparent;border:0;border-radius:0;overflow:hidden;box-shadow:none;outline:0}
+.playerframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent}
+.playerheading{font-size:20px;font-weight:750;line-height:1.35;margin:14px 2px 7px}
+.playeractions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.pillbtn{border-radius:20px;background:#272727;padding:10px 15px;font-weight:600}.pillbtn.primary{background:#f1f1f1;color:#111}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 15px}.toolbar select{background:#272727;border:0;border-radius:8px;padding:9px 12px}
+.status{color:#aaa;font-size:12px;margin:10px 0}.empty{grid-column:1/-1;text-align:center;color:#aaa;padding:50px 15px;background:#181818;border-radius:14px}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;height:64px;padding-bottom:env(safe-area-inset-bottom);background:#0f0f0f;border-top:1px solid #292929;display:flex;justify-content:space-around;z-index:30}
+.navitem{background:transparent;color:#aaa;min-width:65px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px}
+.navitem b{font-size:20px;font-weight:400}.navitem.active{color:#fff}
+.page{display:none}.page.active{display:block}
+.settingsbox{background:#181818;border-radius:14px;padding:16px;max-width:650px}.settingsbox p{color:#aaa;line-height:1.5}
+.settingsbox button{background:#303030;padding:10px 14px;border-radius:9px}.settingsbox input[type=file]{display:none}
+@media(max-width:900px){.feed{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}main{padding:13px}}
+@media(max-width:560px){
+ .topbar{padding:0 11px;gap:9px}.brand{font-size:17px}.brand span{display:none}.searchwrap{max-width:none}
+ .searchwrap input{padding:0 11px;width:40px}.searchwrap button{width:44px}
+ .feed{grid-template-columns:1fr;gap:22px}.thumbwrap{border-radius:0;margin:0 -13px}
+ .video-info{padding:10px 2px 0}.video-title{font-size:15px}main{padding:12px 13px}
+ .sectionhead h2{font-size:18px}
+ /* Full-bleed watch player: ignore the feed's side gutters. */
+ #playerView{width:calc(100% + 26px);margin-left:-13px;margin-right:-13px}
+ .playerframe{width:100%;aspect-ratio:16/9;border-radius:0;box-shadow:none}
+ .playerheading,.playeractions,#playingMeta{margin-left:13px;margin-right:13px}
+}
+@media(orientation:landscape){
+ #playerView{width:100vw;max-width:none;margin-left:calc(50% - 50vw);margin-right:0}
+ .playerframe{width:100%;aspect-ratio:16/9;border-radius:0;box-shadow:none}
+ .playerheading,.playeractions,#playingMeta{margin-left:16px;margin-right:16px}
+}
+
+/* Penguinz0 translucent / sharp visual refresh */
+:root{
+  --bg:#101318;
+  --surface:rgba(28,34,43,.78);
+  --surface2:rgba(42,51,64,.72);
+  --text:#f4f7fb;
+  --muted:#aab5c4;
+  --line:rgba(220,232,248,.16);
+  --accent:#e63946;
+}
+html,body{background:
+  radial-gradient(ellipse at 12% 0%,rgba(42,92,128,.20),transparent 38%),
+  radial-gradient(ellipse at 92% 16%,rgba(118,48,62,.16),transparent 34%),
+  #101318;color:var(--text)}
+.topbar{
+  background:rgba(13,17,23,.82)!important;
+  border-bottom:1px solid var(--line)!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.logo{border-radius:10px!important;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 5px 18px rgba(230,57,70,.22)}
+.brand{letter-spacing:-.65px}
+.searchwrap input{
+  background:rgba(255,255,255,.055)!important;
+  border:1px solid rgba(225,236,250,.2)!important;
+  border-radius:7px 0 0 7px!important;
+}
+.searchwrap button{
+  background:rgba(255,255,255,.11)!important;
+  border:1px solid rgba(225,236,250,.2)!important;
+  border-left:0!important;border-radius:0 7px 7px 0!important;
+}
+.chips{
+  background:rgba(16,19,24,.84)!important;
+  border-bottom:1px solid var(--line)!important;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.chip{
+  border:1px solid rgba(230,239,250,.12)!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.075)!important;
+  color:#e8edf5!important;
+  transition:background .15s ease,border-color .15s ease;
+}
+.chip.active{
+  color:#fff!important;
+  background:linear-gradient(135deg,rgba(230,57,70,.92),rgba(165,35,55,.92))!important;
+  border-color:rgba(255,150,160,.55)!important;
+  box-shadow:0 4px 18px rgba(230,57,70,.18);
+}
+.video-card{border-radius:8px}
+.thumbwrap{
+  border-radius:6px!important;
+  border:1px solid rgba(226,237,250,.14);
+  background:rgba(255,255,255,.05)!important;
+}
+.video-info{padding-left:2px;padding-right:2px}
+.avatar{border-radius:8px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.playerframe{background:#080a0d!important}
+.playerheading{letter-spacing:-.45px}
+.playeractions .pillbtn,.pillbtn,.actionpill{
+  border:1px solid rgba(225,236,250,.15)!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.085)!important;
+  color:#f3f6fb!important;
+}
+.playeractions .pillbtn.primary,.pillbtn.primary{
+  background:linear-gradient(135deg,#e63946,#b82d40)!important;
+  border-color:rgba(255,180,185,.4)!important;
+  color:#fff!important;
+}
+.toolbar select{
+  border:1px solid rgba(225,236,250,.17)!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.08)!important;
+}
+.empty,.settingsbox{
+  background:rgba(34,42,53,.66)!important;
+  border:1px solid var(--line)!important;
+  border-radius:8px!important;
+}
+.bottomnav{
+  background:rgba(13,17,23,.88)!important;
+  border-top:1px solid var(--line)!important;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.navitem.active{color:#ff6470!important}
+.navitem b{filter:drop-shadow(0 1px 4px rgba(255,255,255,.12))}
+.sectionhead h2{letter-spacing:-.5px}
+.video-title{letter-spacing:-.15px}
+.status{color:#b7c1ce}
+@media(prefers-reduced-transparency:reduce){
+ .topbar,.chips,.bottomnav{backdrop-filter:none;-webkit-backdrop-filter:none;background:#171d26!important}
+}
+
+
+/* Final cleanup: remove the separator and the exposed strip above the watch player. */
+.chips,
+#chips {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+.chips::after,
+.chips::before {
+  content: none !important;
+  display: none !important;
+}
+main:has(#playerView[style*="display: block"]) {
+  padding-top: 0 !important;
+}
+#homePage:has(#playerView[style*="display: block"]) #playerView {
+  margin-top: 0 !important;
+}
+
+
+/* Random vertical feed: landscape uploads presented in 9:16 cards */
+#shortsPage{width:100%;max-width:100%;min-width:0}
+#shortsPage .sectionhead{position:sticky;top:58px;z-index:8;padding:12px 0;background:rgba(16,19,24,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#shortsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:start}
+.short-card{position:relative;aspect-ratio:9/16;min-width:0;overflow:hidden;background:#080a0d;border:1px solid rgba(230,239,250,.13);border-radius:8px;cursor:pointer}
+.short-card .short-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+.short-card .short-iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
+.short-card .short-shade{position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(0,0,0,.82));pointer-events:none}
+.short-card .short-title{position:absolute;left:12px;right:12px;bottom:14px;color:white;font-size:14px;font-weight:700;line-height:1.35;text-shadow:0 1px 4px #000;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;pointer-events:none}
+.short-card .short-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-size:23px;border:1px solid rgba(255,255,255,.45);pointer-events:none}
+.short-card.is-playing .short-play,.short-card.is-playing .short-shade,.short-card.is-playing .short-title{display:none}
+#shortsMore{display:block;margin:18px auto 30px}
+@media(max-width:700px){#shortsGrid{grid-template-columns:minmax(0,1fr);gap:22px}.short-card{width:min(100%,430px);margin:0 auto}}
+
+
+/* Fix Shorts playback: the thumbnail was painting over the embedded player. */
+.short-card .short-iframe {
+  z-index: 5 !important;
+}
+.short-card.is-playing .short-thumb {
+  display: none !important;
+}
+.short-card.is-playing .short-shade,
+.short-card.is-playing .short-title,
+.short-card.is-playing .short-play {
+  display: none !important;
+}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+ <div class="logo">P</div><div class="brand">Penguinz0<span>FAN PLAYER</span></div>
+ <form class="searchwrap" id="searchForm"><input id="search" type="search" placeholder="Search Penguinz0 videos" autocomplete="off"><button aria-label="Search">⌕</button></form>
+ <button class="iconbtn" id="shuffleTop" title="Random video">⤨</button>
+</header>
+<div class="chips" id="chips">
+ <button class="chip active" data-filter="all">All</button><button class="chip" data-filter="random">Random</button><button class="chip" data-filter="latest">Latest</button><button class="chip" data-filter="unwatched">Not watched</button><button class="chip" data-filter="year">By year</button>
+</div>
+<main>
+<section id="homePage" class="page active">
+ <section id="playerView">
+  <div class="playerframe"><iframe id="frame" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="YouTube video player"></iframe></div>
+  <div class="playerheading" id="playingTitle"></div><div class="subtle" id="playingMeta"></div>
+  <div class="playeractions"><button class="pillbtn primary" id="again">⤨ Another random video</button><button class="pillbtn" id="watched">✓ Mark watched</button><button class="pillbtn" id="open">Open on YouTube ↗</button></div>
+ </section>
+ <div class="sectionhead"><div><h2 id="feedHeading">Videos for you</h2><div class="subtle" id="feedSub">Only from Penguinz0</div></div><div class="subtle" id="count">0 videos</div></div>
+ <div class="toolbar" id="yearToolbar" hidden><select id="year"><option value="all">Every year</option></select><select id="sort"><option value="new">Newest first</option><option value="old">Oldest first</option></select></div>
+ <div class="feed" id="grid"><div class="empty">Loading your Penguinz0 library…</div></div><div class="status" id="status"></div>
+</section>
+<section id="shortsPage" class="page"><div class="sectionhead"><div><h2>Random vertical feed</h2><div class="subtle">Landscape uploads displayed in a 9:16 feed · shuffled each visit</div></div><button class="pillbtn" id="reshuffleShorts">↻ Shuffle</button></div><div id="shortsGrid"></div><button class="pillbtn" id="shortsMore">Load more</button></section>
+<section id="libraryPage" class="page"><div class="sectionhead"><div><h2>Your library</h2><div class="subtle">Saved locally on this device</div></div></div><div class="playeractions"><button class="pillbtn" id="showWatched">Watched videos</button><button class="pillbtn" id="showUnwatched">Not watched</button><button class="pillbtn" id="showAll">All videos</button></div><div class="feed" id="libraryGrid"></div></section>
+<section id="settingsPage" class="page"><div class="sectionhead"><div><h2>Settings</h2><div class="subtle">Penguinz0 Player</div></div></div><div class="settingsbox"><p id="catalogueStatus">No catalogue loaded.</p><button id="import">Import video catalogue (JSON)</button><input type="file" id="file" accept=".json,application/json"><p>Import is optional. The app uses its bundled public catalogue when available. Playback uses YouTube's embedded player. YouTube may still show ads or restrict embeds.</p></div></section>
+</main>
+<nav class="bottomnav"><button class="navitem active" data-page="homePage"><b>⌂</b>Home</button><button class="navitem" data-page="shortsPage"><b>▣</b>Shorts</button><button class="navitem" data-page="libraryPage"><b>▤</b>Library</button><button class="navitem" data-page="settingsPage"><b>⚙</b>Settings</button></nav>
+<script src="catalogue.js"></script>
+<script>
+window.addEventListener('error',e=>{const s=document.getElementById('status');if(s)s.textContent='App error: '+(e.message||'JavaScript error')});
+window.addEventListener('unhandledrejection',e=>{const s=document.getElementById('status');if(s)s.textContent='App error: '+String(e.reason||'Unhandled promise rejection')});
+const $=id=>document.getElementById(id),KEY='p0_catalogue',WATCH='p0_watched';
+let videos=[],view=[],current=null,onlyUnwatched=false,activePage='homePage',activeChip='all';
+function watchedSet(){try{return new Set(JSON.parse(localStorage.getItem(WATCH)||'[]'))}catch{return new Set()}}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function validRows(rows){return (rows||[]).map(v=>({id:String(v.id||v.videoId||'').trim(),title:String(v.title||'Untitled'),publishedAt:v.publishedAt||v.date||'',thumb:v.thumb||v.thumbnail||''})).filter(v=>/^[\w-]{11}$/.test(v.id)&&!isNaN(Date.parse(v.publishedAt))).map(v=>({...v,thumb:v.thumb||`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(videos))}catch{}}
+function years(){let ys=[...new Set(videos.map(v=>new Date(v.publishedAt).getFullYear()))].sort((a,b)=>b-a);$('year').innerHTML='<option value="all">Every year</option>'+ys.map(y=>`<option value="${y}">${y}</option>`).join('')}
+function applyFilter(){const q=$('search').value.trim().toLowerCase(),y=$('year').value,sort=$('sort').value,seen=watchedSet();view=videos.filter(v=>(y==='all'||new Date(v.publishedAt).getFullYear()==+y)&&(!onlyUnwatched||!seen.has(v.id))&&(!q||(v.title||'').toLowerCase().includes(q)));if(activeChip==='unwatched')view=view.filter(v=>!seen.has(v.id));if(activeChip==='latest')view=view.slice().sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt)).slice(0,80);view.sort((a,b)=>sort==='old'?Date.parse(a.publishedAt)-Date.parse(b.publishedAt):Date.parse(b.publishedAt)-Date.parse(a.publishedAt));render()}
+function card(v){return `<article class="video-card" data-id="${v.id}"><div class="thumbwrap"><img class="thumb" loading="lazy" src="${esc(v.thumb)}" alt=""><span class="duration">${new Date(v.publishedAt).getFullYear()}</span></div><div class="video-info"><div class="avatar">P</div><div class="video-copy"><div class="video-title">${esc(v.title)}</div><div class="video-meta">Penguinz0<br>${new Date(v.publishedAt).toLocaleDateString()} · ${watchedSet().has(v.id)?'Watched':'Video'}</div></div><button class="more" aria-label="More">⋮</button></div></article>`}
+
+let shortsOrder=[],shortsCursor=0,shortsActiveId=null;
+function shuffleShorts(){
+ shortsOrder=videos.slice().sort(()=>Math.random()-.5);
+ shortsCursor=0;shortsActiveId=null;
+ $('shortsGrid').innerHTML='';
+ appendShorts(12);
+}
+function appendShorts(amount=12){
+ const batch=shortsOrder.slice(shortsCursor,shortsCursor+amount);
+ shortsCursor+=batch.length;
+ $('shortsGrid').insertAdjacentHTML('beforeend',batch.map(v=>`
+  <article class="short-card" data-id="${v.id}" aria-label="${esc(v.title)}">
+   <img class="short-thumb" loading="lazy" src="${esc(v.thumb)}" alt="">
+   <div class="short-shade"></div><div class="short-play">▶</div>
+   <div class="short-title">${esc(v.title)}</div>
+  </article>`).join(''));
+ $('shortsMore').style.display=shortsCursor<shortsOrder.length?'block':'none';
+}
+function activateShort(card){
+ const v=videos.find(x=>x.id===card.dataset.id);if(!v)return;
+ // Keep only one active embed to avoid multiple simultaneous players and excess memory.
+ document.querySelectorAll('.short-card.is-playing').forEach(el=>{
+  el.classList.remove('is-playing');
+  const f=el.querySelector('iframe');if(f)f.remove();
+ });
+ card.classList.add('is-playing');shortsActiveId=v.id;
+ card.insertAdjacentHTML('afterbegin',`<iframe class="short-iframe" src="https://www.youtube.com/embed/${v.id}?autoplay=1&playsinline=1&controls=1&rel=0&origin=https%3A%2F%2Fappassets.androidplatform.net" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="${esc(v.title)}"></iframe>`);
+}
+
+function render(){$('count').textContent=view.length.toLocaleString()+' videos';$('grid').innerHTML=view.slice(0,100).map(card).join('')||'<div class="empty">No videos found. Try another search or year.</div>';if(!shortsOrder.length && videos.length) shuffleShorts();$('libraryGrid').innerHTML=videos.filter(v=>watchedSet().has(v.id)).slice(0,100).sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt)).map(card).join('')||'<div class="empty">Your watched videos will appear here.</div>';$('catalogueStatus').textContent=`${videos.length.toLocaleString()} videos available on this device.`;$('feedHeading').textContent=$('search').value?'Search results':activeChip==='latest'?'Latest uploads':activeChip==='unwatched'?'Not watched yet':$('year').value==='all'?'Videos for you':`Penguinz0 in ${$('year').value}`;$('feedSub').textContent='Only from Penguinz0'}
+function play(v){if(!v)return;current=v;$('playerView').style.display='block';$('playingTitle').textContent=v.title;$('playingMeta').textContent=`Penguinz0 · ${new Date(v.publishedAt).toLocaleDateString()} · ${new Date(v.publishedAt).getFullYear()}`;$('frame').src='https://www.youtube.com/embed/'+v.id+'?autoplay=1&playsinline=1&origin=https%3A%2F%2Fappassets.androidplatform.net';$('playerView').scrollIntoView({behavior:'smooth',block:'start'})}
+function random(){if(view.length)play(view[Math.floor(Math.random()*view.length)]);else $('status').textContent='No videos available for this selection.'}
+function setChip(name){activeChip=name;document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active',b.dataset.filter===name));$('yearToolbar').hidden=name!=='year';if(name==='random')random();else if(name==='year'){$('yearToolbar').hidden=false;applyFilter()}else applyFilter()}
+function showPage(id){if(id==='shortsPage' && !shortsOrder.length)shuffleShorts();activePage=id;document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'})}
+$('grid').addEventListener('click',e=>{let c=e.target.closest('.video-card');if(c)play(videos.find(v=>v.id===c.dataset.id))});
+$('shortsGrid').addEventListener('click',e=>{let c=e.target.closest('.short-card');if(c && !c.classList.contains('is-playing'))activateShort(c)});
+$('shortsMore').onclick=()=>appendShorts(12);
+$('reshuffleShorts').onclick=shuffleShorts;
+$('shortsPage').addEventListener('scroll',()=>{if(activePage==='shortsPage' && window.innerHeight+window.scrollY>document.body.offsetHeight-700 && shortsCursor<shortsOrder.length)appendShorts(12)},{passive:true});
+$('libraryGrid').addEventListener('click',e=>{let c=e.target.closest('.video-card');if(c)play(videos.find(v=>v.id===c.dataset.id))});
+$('searchForm').onsubmit=e=>{e.preventDefault();setChip('all');applyFilter()};let st;$('search').oninput=()=>{clearTimeout(st);st=setTimeout(applyFilter,180)};
+$('chips').onclick=e=>{let b=e.target.closest('.chip');if(b)setChip(b.dataset.filter)};
+$('shuffleTop').onclick=random;$('again').onclick=random;$('year').onchange=applyFilter;$('sort').onchange=applyFilter;
+$('watched').onclick=()=>{if(current){let s=watchedSet();s.add(current.id);try{localStorage.setItem(WATCH,JSON.stringify([...s]))}catch{}applyFilter()}};
+$('open').onclick=()=>{if(current)location.href='https://www.youtube.com/watch?v='+current.id};
+document.querySelectorAll('.navitem').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+$('showWatched').onclick=()=>{showPage('libraryPage');$('libraryGrid').innerHTML=videos.filter(v=>watchedSet().has(v.id)).slice(0,100).map(card).join('')||'<div class="empty">No watched videos yet.</div>'};
+$('showUnwatched').onclick=()=>{showPage('libraryPage');$('libraryGrid').innerHTML=videos.filter(v=>!watchedSet().has(v.id)).slice(0,100).map(card).join('')||'<div class="empty">No unwatched videos.</div>'};
+$('showAll').onclick=()=>{showPage('homePage');setChip('all')};
+$('import').onclick=()=>$('file').click();
+$('file').onchange=async e=>{try{let obj=JSON.parse(await e.target.files[0].text());videos=validRows(Array.isArray(obj)?obj:(obj.videos||[]));save();years();applyFilter();$('status').textContent=`Imported ${videos.length} videos.`}catch{$('status').textContent='Could not read JSON catalogue.'}};
+let bundled=Array.isArray(window.P0_CATALOGUE)?validRows(window.P0_CATALOGUE):[],saved=localStorage.getItem(KEY);
+if(saved){try{const cached=validRows(JSON.parse(saved));videos=cached.length?cached:bundled}catch{videos=bundled}}else videos=bundled;
+if(videos.length){save();years();applyFilter();$('status').textContent=`Loaded ${videos.length.toLocaleString()} Penguinz0 videos.`}else $('status').textContent='Catalogue is empty. The GitHub catalogue-fetch step must complete successfully.';
+</script>
+</body></html>
