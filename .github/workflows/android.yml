@@ -5,6 +5,7 @@ on:
     branches: [main, master]
     paths:
       - 'app/src/main/java/**'
+      - 'app/src/main/assets/**'
       - 'app/src/main/AndroidManifest.xml'
       - 'app/build.gradle'
       - 'build.gradle'
@@ -14,9 +15,11 @@ on:
       - 'gradlew'
       - 'gradlew.bat'
       - '.github/workflows/android.yml'
+
   pull_request:
     paths:
       - 'app/src/main/java/**'
+      - 'app/src/main/assets/**'
       - 'app/src/main/AndroidManifest.xml'
       - 'app/build.gradle'
       - 'build.gradle'
@@ -26,6 +29,7 @@ on:
       - 'gradlew'
       - 'gradlew.bat'
       - '.github/workflows/android.yml'
+
   workflow_dispatch:
 
 permissions:
@@ -35,6 +39,7 @@ jobs:
   build-apk:
     name: Fetch catalogue, build semantic index and APK
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -71,13 +76,17 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import json
+
           p = Path("app/src/main/assets/catalogue.js")
           text = p.read_text(encoding="utf-8")
           prefix = "window.P0_CATALOGUE ="
+
           if not text.startswith(prefix):
               raise SystemExit("catalogue.js does not contain window.P0_CATALOGUE")
+
           rows = json.loads(text[len(prefix):].strip().removesuffix(";"))
           print(f"Catalogue ready: {len(rows)} videos")
+
           if not rows:
               raise SystemExit("Refusing to build with an empty catalogue")
           PY
