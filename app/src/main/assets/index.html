@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101114"><title>Penguinz0 Player</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#191b20;--panel2:#252830;--text:#f5f5f6;--muted:#a5a7ad;--accent:#e34b4b;--line:#30333b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,Arial}
+header{padding:16px;background:#17191e;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3}
+.brand{max-width:1000px;margin:auto;font-size:20px;font-weight:800}.brand small{display:block;font-size:12px;color:var(--muted);font-weight:400}
+main{max-width:1000px;margin:auto;padding:14px 12px 50px}.panel{background:var(--panel);border:1px solid var(--line);padding:13px;border-radius:15px;margin-bottom:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button,select,input{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+button{font-weight:650}button.primary{background:var(--accent);border-color:var(--accent)}select{flex:1;min-width:110px}
+.note{font-size:12px;color:var(--muted);line-height:1.5}.status{font-size:13px;color:var(--muted);margin-top:10px}
+.frame{aspect-ratio:16/9;position:relative;background:#000;border-radius:12px;overflow:hidden}.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#player{display:none}.playing{font-weight:750;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}.card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}.card div{padding:8px;font-size:13px;font-weight:650}.muted{font-size:11px;color:var(--muted);font-weight:400}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style></head><body>
+<header><div class="brand">🐧 Penguinz0 Player<small>Random videos · browse by year · no sign-in</small></div></header>
+<main>
+<div class="panel">
+ <div class="row"><button class="primary" id="random">🎲 Surprise me</button><button id="shuffle">Shuffle year</button><button id="latest">Latest</button></div>
+ <div class="row" style="margin-top:9px"><select id="year"><option value="all">All years</option></select><select id="sort"><option value="new">Newest first</option><option value="old">Oldest first</option></select></div>
+ <div class="row" style="margin-top:9px"><button id="import">Import video catalogue (JSON)</button><button id="unwatched">Unwatched only: Off</button></div>
+ <input type="file" id="file" accept=".json,application/json" hidden>
+ <div class="status" id="status">Import a catalogue JSON file to populate the archive. No YouTube Data API key or Google sign-in is used.</div>
+</div>
+<section class="panel" id="player">
+ <div class="playing" id="playingTitle"></div><div class="frame"><iframe id="frame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="YouTube video player"></iframe></div>
+ <div class="row" style="margin-top:10px"><button id="again">Another random video</button><button id="watched">Mark watched</button><button id="open">Open on YouTube</button></div>
+</section>
+<div class="panel"><b id="count">0 videos</b><div class="note" id="filter">Catalogue</div></div>
+<div class="grid" id="grid"></div>
+<div class="panel note" style="margin-top:14px">Playback uses the same standard YouTube embed approach as your HTML. Embedded playback can still show ads; this app cannot guarantee ad-free playback. Catalogue import is separate from playback.</div>
+</main>
+<script>
+const $=id=>document.getElementById(id), KEY='p0_catalogue', WATCH='p0_watched';
+let videos=[],view=[],current=null,onlyUnwatched=false;
+function watchedSet(){try{return new Set(JSON.parse(localStorage.getItem(WATCH)||'[]'))}catch{return new Set()}}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function validRows(rows){return rows.map(v=>({id:String(v.id||v.videoId||'').trim(),title:String(v.title||'Untitled'),publishedAt:v.publishedAt||v.date||'',thumb:v.thumb||v.thumbnail||''})).filter(v=>/^[\w-]{11}$/.test(v.id)&&!isNaN(Date.parse(v.publishedAt))).map(v=>({...v,thumb:v.thumb||`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}))}
+function save(){localStorage.setItem(KEY,JSON.stringify(videos))}
+function years(){let ys=[...new Set(videos.map(v=>new Date(v.publishedAt).getFullYear()))].sort((a,b)=>b-a);$('year').innerHTML='<option value="all">All years</option>'+ys.map(y=>`<option>${y}</option>`).join('')}
+function filter(){let y=$('year').value,s=$('sort').value,seen=watchedSet();view=videos.filter(v=>(y==='all'||new Date(v.publishedAt).getFullYear()==+y)&&(!onlyUnwatched||!seen.has(v.id)));view.sort((a,b)=>s==='old'?Date.parse(a.publishedAt)-Date.parse(b.publishedAt):Date.parse(b.publishedAt)-Date.parse(a.publishedAt));render()}
+function render(){$('count').textContent=view.length+' videos';$('filter').textContent=($('year').value==='all'?'All years':$('year').value)+' · '+($('sort').value==='old'?'Oldest first':'Newest first');$('grid').innerHTML=view.map(v=>`<article class="card" data-id="${v.id}"><img loading="lazy" src="${esc(v.thumb)}"><div>${esc(v.title)}<div class="muted">${new Date(v.publishedAt).toLocaleDateString()}${watchedSet().has(v.id)?' · Watched':''}</div></div></article>`).join('')||'<div class="note">No videos yet. Import a JSON catalogue.</div>'}
+function play(v){if(!v)return;current=v;$('player').style.display='block';$('playingTitle').textContent=v.title+' · '+new Date(v.publishedAt).getFullYear();$('frame').src='https://www.youtube.com/embed/'+v.id+'?autoplay=1&playsinline=1';$('player').scrollIntoView({behavior:'smooth'})}
+function random(){if(view.length)play(view[Math.floor(Math.random()*view.length)]);else $('status').textContent='Import a catalogue first.'}
+$('import').onclick=()=>$('file').click();
+$('file').onchange=async e=>{try{let obj=JSON.parse(await e.target.files[0].text());let rows=Array.isArray(obj)?obj:(obj.videos||[]);videos=validRows(rows);save();years();filter();$('status').textContent=`Imported ${videos.length} valid videos.`}catch(err){$('status').textContent='Could not read JSON. Expected an array of videos with id, title and publishedAt.'}};
+$('grid').onclick=e=>{let c=e.target.closest('.card');if(c)play(videos.find(v=>v.id===c.dataset.id))};
+$('random').onclick=random;$('shuffle').onclick=random;$('again').onclick=random;$('latest').onclick=()=>{let v=[...videos].sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt))[0];play(v)};
+$('year').onchange=filter;$('sort').onchange=filter;
+$('unwatched').onclick=()=>{onlyUnwatched=!onlyUnwatched;$('unwatched').textContent='Unwatched only: '+(onlyUnwatched?'On':'Off');filter()};
+$('watched').onclick=()=>{if(current){let s=watchedSet();s.add(current.id);localStorage.setItem(WATCH,JSON.stringify([...s]));filter()}};
+$('open').onclick=()=>{if(current)location.href='https://www.youtube.com/watch?v='+current.id};
+let saved=localStorage.getItem(KEY);if(saved){try{videos=validRows(JSON.parse(saved));years();filter();$('status').textContent=`Loaded ${videos.length} videos from this device.`}catch{}}
+</script></body></html>
