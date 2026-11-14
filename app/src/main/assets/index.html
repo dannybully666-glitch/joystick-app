@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0f0f">
+<title>Penguinz0</title>
+<style>
+:root{color-scheme:dark;--bg:#0f0f0f;--surface:#181818;--surface2:#272727;--text:#f1f1f1;--muted:#aaa;--line:#303030}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-width:0;max-width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font:14px Roboto,Arial,system-ui,sans-serif}
+html{scroll-behavior:smooth}
+body{padding-bottom:76px}
+button,input,select{font:inherit;color:inherit}button{border:0;cursor:pointer}
+.topbar{height:58px;position:sticky;top:0;z-index:20;background:#0f0f0f;display:flex;align-items:center;gap:13px;padding:0 16px;border-bottom:1px solid #202020}
+.logo{width:34px;height:34px;border-radius:50%;background:#e62117;display:grid;place-items:center;font-size:19px;font-weight:900;flex:none}
+.brand{font-size:19px;font-weight:800;letter-spacing:-.5px;white-space:nowrap}.brand span{font-size:10px;color:#aaa;vertical-align:top;margin-left:3px}
+.searchwrap{margin-left:auto;display:flex;max-width:560px;width:100%;height:40px;min-width:0}
+.searchwrap input{min-width:0;flex:1;background:#121212;border:1px solid #333;border-radius:22px 0 0 22px;padding:0 16px;outline:none}
+.searchwrap input:focus{border-color:#3d75bd}.searchwrap button{width:54px;flex:none;background:#282828;border:1px solid #333;border-left:0;border-radius:0 22px 22px 0;font-size:18px}
+.iconbtn{background:transparent;color:#eee;font-size:21px;width:38px;height:38px;border-radius:50%}
+.chips{position:sticky;top:58px;z-index:15;background:#0f0f0f;display:flex;gap:9px;overflow-x:auto;padding:11px 16px;border-bottom:1px solid #202020;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}.chip{white-space:nowrap;border-radius:8px;background:#272727;padding:8px 13px;font-weight:600;font-size:13px}.chip.active{background:#f1f1f1;color:#111}
+main{width:100%;max-width:1280px;margin:0 auto;padding:16px;min-width:0}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:8px 0 15px;gap:10px}.sectionhead h2{font-size:20px;margin:0;letter-spacing:-.3px}.subtle{color:var(--muted);font-size:12px}
+.feed{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 16px}
+.video-card{min-width:0;cursor:pointer}.thumbwrap{position:relative;aspect-ratio:16/9;background:#202020;border-radius:13px;overflow:hidden}.thumb{width:100%;height:100%;object-fit:cover;display:block}
+.video-info{display:flex;gap:11px;padding-top:11px}.avatar{width:36px;height:36px;border-radius:50%;background:#e62117;display:grid;place-items:center;flex:none;font-weight:900}
+.video-copy{min-width:0;flex:1}.video-title{font-size:15px;font-weight:650;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.video-meta{font-size:12px;color:var(--muted);line-height:1.55;margin-top:5px}.more{background:transparent;color:#aaa;font-size:19px;padding:0 4px;align-self:flex-start}
+#playerView{display:none;margin:0 0 24px;width:100%;max-width:none;min-width:0}
+.playerframe{position:relative;width:100%;aspect-ratio:16/9;background:transparent;border:0;border-radius:0;overflow:hidden;box-shadow:none;outline:0}
+.playerframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent}
+.playerheading{font-size:20px;font-weight:750;line-height:1.35;margin:14px 2px 7px}
+.playeractions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.pillbtn{border-radius:20px;background:#272727;padding:10px 15px;font-weight:600}.pillbtn.primary{background:#f1f1f1;color:#111}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 15px}.toolbar select{background:#272727;border:0;border-radius:8px;padding:9px 12px}
+.status{color:#aaa;font-size:12px;margin:10px 0}.empty{grid-column:1/-1;text-align:center;color:#aaa;padding:50px 15px;background:#181818;border-radius:14px}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;height:64px;padding-bottom:env(safe-area-inset-bottom);background:#0f0f0f;border-top:1px solid #292929;display:flex;justify-content:space-around;z-index:30}
+.navitem{background:transparent;color:#aaa;min-width:65px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px}
+.navitem b{font-size:20px;font-weight:400}.navitem.active{color:#fff}
+.page{display:none}.page.active{display:block}
+.settingsbox{background:#181818;border-radius:14px;padding:16px;max-width:650px}.settingsbox p{color:#aaa;line-height:1.5}
+.settingsbox button{background:#303030;padding:10px 14px;border-radius:9px}.settingsbox input[type=file]{display:none}
+@media(max-width:900px){.feed{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}main{padding:13px}}
+@media(max-width:560px){
+ .topbar{padding:0 11px;gap:9px}.brand{font-size:17px}.brand span{display:none}.searchwrap{max-width:none}
+ .searchwrap input{padding:0 11px;width:40px}.searchwrap button{width:44px}
+ .feed{grid-template-columns:1fr;gap:22px}.thumbwrap{border-radius:0;margin:0 -13px}
+ .video-info{padding:10px 2px 0}.video-title{font-size:15px}main{padding:12px 13px}
+ .sectionhead h2{font-size:18px}
+ /* Full-bleed watch player: ignore the feed's side gutters. */
+ #playerView{width:calc(100% + 26px);margin-left:-13px;margin-right:-13px}
+ .playerframe{width:100%;aspect-ratio:16/9;border-radius:0;box-shadow:none}
+ .playerheading,.playeractions,#playingMeta{margin-left:13px;margin-right:13px}
+}
+@media(orientation:landscape){
+ #playerView{width:100vw;max-width:none;margin-left:calc(50% - 50vw);margin-right:0}
+ .playerframe{width:100%;aspect-ratio:16/9;border-radius:0;box-shadow:none}
+ .playerheading,.playeractions,#playingMeta{margin-left:16px;margin-right:16px}
+}
+
+/* Penguinz0 translucent / sharp visual refresh */
+:root{
+  --bg:#101318;
+  --surface:rgba(28,34,43,.78);
+  --surface2:rgba(42,51,64,.72);
+  --text:#f4f7fb;
+  --muted:#aab5c4;
+  --line:rgba(220,232,248,.16);
+  --accent:#e63946;
+}
+html,body{background:
+  radial-gradient(ellipse at 12% 0%,rgba(42,92,128,.20),transparent 38%),
+  radial-gradient(ellipse at 92% 16%,rgba(118,48,62,.16),transparent 34%),
+  #101318;color:var(--text)}
+.topbar{
+  background:rgba(13,17,23,.82)!important;
+  border-bottom:1px solid var(--line)!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.logo{border-radius:10px!important;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 5px 18px rgba(230,57,70,.22)}
+.brand{letter-spacing:-.65px}
+.searchwrap input{
+  background:rgba(255,255,255,.055)!important;
+  border:1px solid rgba(225,236,250,.2)!important;
+  border-radius:7px 0 0 7px!important;
+}
+.searchwrap button{
+  background:rgba(255,255,255,.11)!important;
+  border:1px solid rgba(225,236,250,.2)!important;
+  border-left:0!important;border-radius:0 7px 7px 0!important;
+}
+.chips{
+  background:rgba(16,19,24,.84)!important;
+  border-bottom:1px solid var(--line)!important;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.chip{
+  border:1px solid rgba(230,239,250,.12)!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.075)!important;
+  color:#e8edf5!important;
+  transition:background .15s ease,border-color .15s ease;
+}
+.chip.active{
+  color:#fff!important;
+  background:linear-gradient(135deg,rgba(230,57,70,.92),rgba(165,35,55,.92))!important;
+  border-color:rgba(255,150,160,.55)!important;
+  box-shadow:0 4px 18px rgba(230,57,70,.18);
+}
+.video-card{border-radius:8px}
+.thumbwrap{
+  border-radius:6px!important;
+  border:1px solid rgba(226,237,250,.14);
+  background:rgba(255,255,255,.05)!important;
+}
+.video-info{padding-left:2px;padding-right:2px}
+.avatar{border-radius:8px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.playerframe{background:#080a0d!important}
+.playerheading{letter-spacing:-.45px}
+.playeractions .pillbtn,.pillbtn,.actionpill{
+  border:1px solid rgba(225,236,250,.15)!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.085)!important;
+  color:#f3f6fb!important;
+}
+.playeractions .pillbtn.primary,.pillbtn.primary{
+  background:linear-gradient(135deg,#e63946,#b82d40)!important;
+  border-color:rgba(255,180,185,.4)!important;
+  color:#fff!important;
+}
+.toolbar select{
+  border:1px solid rgba(225,236,250,.17)!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.08)!important;
+}
+.empty,.settingsbox{
+  background:rgba(34,42,53,.66)!important;
+  border:1px solid var(--line)!important;
+  border-radius:8px!important;
+}
+.bottomnav{
+  background:rgba(13,17,23,.88)!important;
+  border-top:1px solid var(--line)!important;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.navitem.active{color:#ff6470!important}
+.navitem b{filter:drop-shadow(0 1px 4px rgba(255,255,255,.12))}
+.sectionhead h2{letter-spacing:-.5px}
+.video-title{letter-spacing:-.15px}
+.status{color:#b7c1ce}
+@media(prefers-reduced-transparency:reduce){
+ .topbar,.chips,.bottomnav{backdrop-filter:none;-webkit-backdrop-filter:none;background:#171d26!important}
+}
+
+
+/* Final cleanup: remove the separator and the exposed strip above the watch player. */
+.chips,
+#chips {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+.chips::after,
+.chips::before {
+  content: none !important;
+  display: none !important;
+}
+main:has(#playerView[style*="display: block"]) {
+  padding-top: 0 !important;
+}
+#homePage:has(#playerView[style*="display: block"]) #playerView {
+  margin-top: 0 !important;
+}
+
+
+/* Shorts-style vertical snap feed: one full-height card per swipe */
+#shortsPage{width:100%;max-width:100%;min-width:0}
+#shortsPage .sectionhead{
+ position:relative;z-index:8;padding:10px 0 12px;
+ background:transparent;display:flex;align-items:center;justify-content:space-between;
+}
+#shortsGrid{
+ display:block;width:100%;
+ height:calc(100vh - 245px);
+ height:calc(100dvh - 245px);
+ min-height:420px;max-height:900px;
+ overflow-y:auto;overflow-x:hidden;
+ overscroll-behavior-y:contain;
+ scroll-snap-type:y mandatory;
+ scroll-behavior:smooth;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-width:none;
+}
+#shortsGrid::-webkit-scrollbar{display:none}
+.short-card{
+ position:relative;display:block;
+ width:min(100%,430px);height:100%;
+ min-height:420px;max-height:900px;
+ margin:0 auto 12px;
+ overflow:hidden;background:#080a0d;
+ border:0;border-radius:8px;cursor:pointer;
+ scroll-snap-align:start;scroll-snap-stop:always;
+}
+.short-card .short-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+.short-card .short-iframe{
+ position:absolute;left:0;top:50%;width:100%;height:31.640625%;
+ border:0;display:block;background:#000;
+ transform:translateY(-50%) scaleY(3.1604938272);
+ transform-origin:center center;z-index:5;
+}
+.short-card .short-shade{position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(0,0,0,.82));pointer-events:none}
+.short-card .short-title{position:absolute;left:12px;right:12px;bottom:14px;color:white;font-size:14px;font-weight:700;line-height:1.35;text-shadow:0 1px 4px #000;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;pointer-events:none}
+.short-card .short-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-size:23px;border:1px solid rgba(255,255,255,.45);pointer-events:none}
+.short-card.is-playing .short-thumb,.short-card.is-playing .short-play,.short-card.is-playing .short-shade,.short-card.is-playing .short-title{display:none!important}
+#shortsMore{display:block;margin:14px auto 24px}
+@media(max-width:700px){
+ #shortsGrid{width:100%;height:calc(100vh - 245px);height:calc(100dvh - 245px);min-height:390px}
+ .short-card{width:100%;height:100%;min-height:390px;border-radius:7px}
+}
+@media(orientation:landscape){
+ #shortsGrid{height:calc(100vh - 205px);height:calc(100dvh - 205px)}
+ .short-card{width:min(100%,560px)}
+}
+
+/* Full-screen Shorts presentation: hide the regular app chrome and let each
+   vertical video occupy the complete WebView area, like a Shorts viewer. */
+body.shorts-mode{overflow:hidden;padding-bottom:0}
+body.shorts-mode>.topbar,
+body.shorts-mode>#chips{display:none!important}
+body.shorts-mode>main{padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
+body.shorts-mode #shortsPage{
+ display:flex!important;flex-direction:column;
+ position:fixed;inset:0;z-index:25;
+ width:100%;height:100%;max-width:none;min-width:0;
+ margin:0;padding:0;background:#000;overflow:hidden;
+}
+body.shorts-mode #shortsPage .sectionhead{display:none!important}
+body.shorts-mode #shortsGrid{
+ display:block;flex:1 1 auto;
+ width:100%;height:100%;min-height:0;max-height:none;
+ margin:0;padding:0;overflow-y:auto;overflow-x:hidden;
+ scroll-snap-type:y mandatory;overscroll-behavior-y:contain;
+ -webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+body.shorts-mode #shortsGrid::-webkit-scrollbar{display:none}
+body.shorts-mode .short-card{
+ width:100%;height:100%;min-height:0;max-height:none;
+ margin:0;border:0;border-radius:0;background:#000;
+ scroll-snap-align:start;scroll-snap-stop:always;
+}
+body.shorts-mode #shortsMore{display:none!important}
+body.shorts-mode .bottomnav{
+ position:fixed;left:0;right:0;bottom:0;z-index:40;
+ height:64px;padding-bottom:env(safe-area-inset-bottom);
+ background:linear-gradient(transparent,rgba(0,0,0,.76))!important;
+ border-top:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+body.shorts-mode .navitem{color:rgba(255,255,255,.78);text-shadow:0 1px 3px #000}
+body.shorts-mode .navitem.active{color:#fff!important}
+body.shorts-mode #reshuffleShorts{
+ display:block!important;position:fixed;top:10px;right:12px;z-index:45;
+ padding:8px 12px;border-radius:22px;background:rgba(0,0,0,.42)!important;
+ border:1px solid rgba(255,255,255,.3)!important;color:#fff;
+ font-size:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+@media(orientation:landscape){
+ body.shorts-mode .short-card{width:100%;max-width:none}
+}
+
+
+/* Correct the Shorts embed viewport.
+   Do not vertically scale a short iframe: YouTube lays out its own player UI
+   inside the iframe viewport, which caused the black band and distorted controls. */
+.short-card .short-iframe,
+body.shorts-mode .short-card .short-iframe {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  border:0!important;
+  margin:0!important;
+  padding:0!important;
+  display:block!important;
+  background:#000!important;
+  transform:none!important;
+  transform-origin:initial!important;
+  z-index:5!important;
+}
+
+
+/* Shorts video display preference */
+.settingrow{
+ display:flex;flex-direction:column;gap:10px;
+ padding:16px;margin:0 0 16px;
+ border:1px solid rgba(220,230,245,.14);
+ border-radius:12px;background:rgba(255,255,255,.035)
+}
+.settingrow label{display:flex;flex-direction:column;gap:5px}
+.settingrow select{
+ width:100%;max-width:420px;padding:12px 14px;
+ color:var(--text,#f5f6f8);background:rgba(255,255,255,.08);
+ border:1px solid rgba(220,230,245,.2);border-radius:9px;font:inherit
+}
+.short-card.stretch-video .short-iframe,
+body.shorts-mode .short-card.stretch-video .short-iframe{
+ position:absolute!important;left:0!important;top:50%!important;
+ width:100%!important;height:31.640625%!important;
+ transform:translateY(-50%) scaleY(3.1604938272)!important;
+ transform-origin:center center!important;
+}
+
+
+/* GitHub-published data sync status in Settings */
+.github-sync-panel{margin:14px 0 16px;padding:15px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.035)}
+.github-sync-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.github-sync-title{font-weight:750}
+.github-sync-refresh{padding:9px 12px;border:1px solid rgba(225,236,250,.18);border-radius:6px;background:rgba(255,255,255,.085);color:var(--text)}
+.github-sync-refresh:disabled{opacity:.5;cursor:default}
+.github-sync-state{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.4}
+.github-sync-dot{width:8px;height:8px;border-radius:50%;background:#8793a2;flex:none}
+.github-sync-panel.checking .github-sync-dot{background:#e9b44c;animation:githubSyncPulse 1.1s ease-in-out infinite}
+.github-sync-panel.success .github-sync-dot{background:#45c486}
+.github-sync-panel.error .github-sync-dot{background:#e66b75}
+.github-sync-detail{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.5}
+@keyframes githubSyncPulse{50%{opacity:.35;transform:scale(.8)}}
+@media(prefers-reduced-motion:reduce){.github-sync-dot{animation:none!important}}
+
+
+
+/* Performance: keep off-screen feed cards out of the active paint/layout work. */
+.video-card{content-visibility:auto;contain-intrinsic-size:auto 270px}
+.video-card .thumb{backface-visibility:hidden}
+@media(max-width:700px){
+ .topbar,.chips,.bottomnav{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+ .video-card{contain-intrinsic-size:auto 285px}
+}
+@media(prefers-reduced-transparency:reduce){.topbar,.chips,.bottomnav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+ <div class="logo">P</div><div class="brand">Penguinz0<span>FAN PLAYER</span></div>
+ <form class="searchwrap" id="searchForm"><input id="search" type="search" placeholder="Search Penguinz0 videos" autocomplete="off"><button aria-label="Search">⌕</button></form>
+ <button class="iconbtn" id="shuffleTop" title="Random video">⤨</button>
+</header>
+<div class="chips" id="chips">
+ <button class="chip active" data-filter="all">All</button><button class="chip" data-filter="random">Random</button><button class="chip" data-filter="latest">Latest</button><button class="chip" data-filter="unwatched">Not watched</button><button class="chip" data-filter="year">By year</button>
+</div>
+<main>
+<section id="homePage" class="page active">
+ <section id="playerView">
+  <div class="playerframe"><iframe id="frame" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="YouTube video player"></iframe></div>
+  <div class="playerheading" id="playingTitle"></div><div class="subtle" id="playingMeta"></div>
+  <div class="playeractions"><button class="pillbtn primary" id="again">⤨ Another random video</button><button class="pillbtn" id="watched">✓ Mark watched</button><button class="pillbtn" id="open">Open on YouTube ↗</button></div>
+ </section>
+ <div class="sectionhead"><div><h2 id="feedHeading">Videos for you</h2><div class="subtle" id="feedSub">Only from Penguinz0</div></div><div class="subtle" id="count">0 videos</div></div>
+ <div class="toolbar" id="yearToolbar" hidden><select id="year"><option value="all">Every year</option></select><select id="sort"><option value="new">Newest first</option><option value="old">Oldest first</option></select></div>
+ <div class="feed" id="grid"><div class="empty">Loading your Penguinz0 library…</div></div><div class="status" id="status"></div>
+</section>
+<section id="shortsPage" class="page"><div class="sectionhead"><div><h2>Random vertical feed</h2><div class="subtle">Landscape uploads displayed in a 9:16 feed · shuffled each visit</div></div><button class="pillbtn" id="reshuffleShorts">↻ Shuffle</button></div><div id="shortsGrid"></div><button class="pillbtn" id="shortsMore">Load more</button></section>
+<section id="libraryPage" class="page"><div class="sectionhead"><div><h2>Your library</h2><div class="subtle">Saved locally on this device</div></div></div><div class="playeractions"><button class="pillbtn" id="showWatched">Watched videos</button><button class="pillbtn" id="showUnwatched">Not watched</button><button class="pillbtn" id="showAll">All videos</button></div><div class="feed" id="libraryGrid"></div></section>
+<section id="settingsPage" class="page"><div class="sectionhead"><div><h2>Settings</h2><div class="subtle">Penguinz0 Player</div></div></div><div class="settingsbox">
+<div class="settingrow"><label for="shortsDisplayMode"><strong>Shorts video display</strong><span class="subtle">Choose how moving videos fit the vertical feed. Thumbnails always stay stretched.</span></label><select id="shortsDisplayMode"><option value="normal">Normal (preserve proportions)</option><option value="stretched">Stretched (fill 9:16)</option></select></div>
+<p id="catalogueStatus">No catalogue loaded.</p>
+<div class="github-sync-panel" id="githubSyncPanel">
+ <div class="github-sync-head"><span class="github-sync-title">GitHub data updates</span><button class="github-sync-refresh" id="githubSyncRefresh" type="button">Check now</button></div>
+ <div class="github-sync-state" role="status" aria-live="polite"><span class="github-sync-dot"></span><span id="syncStatus">Waiting for update check…</span></div>
+ <div class="github-sync-detail" id="syncStage" aria-live="polite">The app checks GitHub’s published manifest, not the Actions run directly.</div>
+ <div class="github-sync-detail" id="githubSyncDetail">The app checks GitHub's published manifest and downloads newer catalogue or semantic-index data when available.</div>
+</div>
+<div class="github-sync-panel" id="remoteWebUpdatePanel">
+ <div class="github-sync-head"><span class="github-sync-title">App feature updates</span><button class="github-sync-refresh" id="remoteWebUpdateCheck" type="button">Check now</button></div>
+ <div class="github-sync-state" role="status" aria-live="polite"><span class="github-sync-dot"></span><span id="remoteWebUpdateStatus">Checking for app updates…</span></div>
+ <div class="github-sync-detail" id="remoteWebUpdateDetail">The app can receive interface, search, and other web-feature updates without downloading a new APK. Android-native changes still require a new APK.</div>
+ <button class="github-sync-refresh" id="remoteWebUpdateRestart" type="button" style="display:none;margin-top:10px">Restart to apply update</button>
+</div>
+<button id="import">Import video catalogue (JSON)</button><input type="file" id="file" accept=".json,application/json"><p>Import is optional. The app uses its bundled public catalogue when available. Playback uses YouTube's embedded player. YouTube may still show ads or restrict embeds.</p></div></section>
+</main>
+<nav class="bottomnav"><button class="navitem active" data-page="homePage"><b>⌂</b>Home</button><button class="navitem" data-page="shortsPage"><b>▣</b>Shorts</button><button class="navitem" data-page="libraryPage"><b>▤</b>Library</button><button class="navitem" data-page="settingsPage"><b>⚙</b>Settings</button></nav>
+<script src="catalogue.js"></script>
+<script>
+window.addEventListener('error',e=>{const s=document.getElementById('status');if(s)s.textContent='App error: '+(e.message||'JavaScript error')});
+window.addEventListener('unhandledrejection',e=>{const s=document.getElementById('status');if(s)s.textContent='App error: '+String(e.reason||'Unhandled promise rejection')});
+const $=id=>document.getElementById(id),KEY='p0_catalogue',WATCH='p0_watched';
+let videos=[],view=[],current=null,onlyUnwatched=false,activePage='homePage',activeChip='all';
+const SHORTS_DISPLAY_KEY='p0_shorts_display';
+function getShortsDisplay(){try{return localStorage.getItem(SHORTS_DISPLAY_KEY)==='stretched'?'stretched':'normal'}catch{return 'normal'}}
+function applyShortsDisplay(){
+ const stretched=getShortsDisplay()==='stretched';
+ document.querySelectorAll('.short-card').forEach(card=>card.classList.toggle('stretch-video',stretched));
+}
+function setShortsDisplay(value){
+ try{localStorage.setItem(SHORTS_DISPLAY_KEY,value==='stretched'?'stretched':'normal')}catch{}
+ applyShortsDisplay();
+}
+
+let watchedCache=null;
+function watchedSet(){
+ if(watchedCache)return watchedCache;
+ try{watchedCache=new Set(JSON.parse(localStorage.getItem(WATCH)||'[]'))}
+ catch{watchedCache=new Set()}
+ return watchedCache;
+}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function validRows(rows){return (rows||[]).map(v=>({id:String(v.id||v.videoId||'').trim(),title:String(v.title||'Untitled'),publishedAt:v.publishedAt||v.date||'',thumb:v.thumb||v.thumbnail||''})).filter(v=>/^[\w-]{11}$/.test(v.id)&&!isNaN(Date.parse(v.publishedAt))).map(v=>({...v,thumb:v.thumb||`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(videos))}catch{}}
+function years(){let ys=[...new Set(videos.map(v=>new Date(v.publishedAt).getFullYear()))].sort((a,b)=>b-a);$('year').innerHTML='<option value="all">Every year</option>'+ys.map(y=>`<option value="${y}">${y}</option>`).join('')}
+function normalizeSearchText(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+function editDistanceWithin(a,b,max){
+ if(Math.abs(a.length-b.length)>max)return max+1;
+ let prev=Array.from({length:b.length+1},(_,i)=>i);
+ for(let i=1;i<=a.length;i++){
+  const cur=[i];let rowMin=i;
+  for(let j=1;j<=b.length;j++){
+   const cost=a[i-1]===b[j-1]?0:1;
+   cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+cost);
+   if(cur[j]<rowMin)rowMin=cur[j];
+  }
+  if(rowMin>max)return max+1;
+  prev=cur;
+ }
+ return prev[b.length];
+}
+function tokenMatchScore(queryToken,titleTokens,titleText){
+ let best=0;
+ for(const token of titleTokens){
+  if(token===queryToken)best=Math.max(best,12);
+  else if(token.startsWith(queryToken))best=Math.max(best,9);
+  else if(token.includes(queryToken))best=Math.max(best,7);
+  else if(queryToken.length>=4){
+   const limit=queryToken.length>=8?2:1;
+   const d=editDistanceWithin(queryToken,token,limit);
+   if(d<=limit)best=Math.max(best,5-d);
+  }
+ }
+ if(best===0 && queryToken.length>=4 && titleText.includes(queryToken.slice(0,-1)))best=3;
+ return best;
+}
+function searchScore(title,query){
+ const normalizedTitle=normalizeSearchText(title);
+ const normalizedQuery=normalizeSearchText(query);
+ if(!normalizedQuery)return 1;
+ if(normalizedTitle===normalizedQuery)return 1000;
+ if(normalizedTitle.includes(normalizedQuery))return 800-normalizedTitle.length/1000;
+ const queryTokens=normalizedQuery.split(/\s+/).filter(Boolean);
+ const titleTokens=normalizedTitle.split(/\s+/).filter(Boolean);
+ if(!queryTokens.length)return 1;
+ let total=0,matched=0;
+ for(const qt of queryTokens){
+  const score=tokenMatchScore(qt,titleTokens,normalizedTitle);
+  if(score>0){matched++;total+=score}
+ }
+ // Require every meaningful search term to find at least a partial/fuzzy match.
+ if(matched!==queryTokens.length)return 0;
+ return total + matched*2 - Math.max(0,titleTokens.length-queryTokens.length)*0.08;
+}
+
+// Semantic search: one embedding per video. Query embeddings are generated on-device.
+// If the model/index cannot load, the existing fuzzy title search remains available.
+let semanticIndex = null;
+let semanticPipeline = null;
+let semanticLoadPromise = null;
+let semanticQueryVersion = 0;
+let semanticScores = null;
+
+let semanticNativePreparePromise = null;
+function ensurePersistentSemanticModel(){
+ if(semanticNativePreparePromise)return semanticNativePreparePromise;
+ semanticNativePreparePromise=new Promise(resolve=>{
+  if(!window.AndroidSemanticStorage || typeof window.AndroidSemanticStorage.ensureModel!=='function'){
+   resolve(false);return;
+  }
+  window.onSemanticModelPrepared=ok=>resolve(!!ok);
+  try{window.AndroidSemanticStorage.ensureModel('onSemanticModelPrepared');}
+  catch(e){console.warn('Native model storage unavailable',e);resolve(false);}
+ });
+ return semanticNativePreparePromise;
+}
+async function loadSemanticSearch(){
+ if(semanticIndex && semanticPipeline)return true;
+ if(semanticLoadPromise)return semanticLoadPromise;
+ semanticLoadPromise=(async()=>{
+  try{
+   $('status').textContent='Preparing semantic search in the background…';
+   const stored=await ensurePersistentSemanticModel();
+   const [localIdxResp, transformers] = await Promise.all([
+    fetch('https://appassets.androidplatform.net/semantic-data/semantic-index.json',{cache:'no-store'}).catch(()=>null),
+    import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
+   ]);
+   const idxResp=localIdxResp && localIdxResp.ok ? localIdxResp : await fetch('semantic-index.json',{cache:'no-cache'});
+   if(!idxResp.ok)throw new Error('Semantic index unavailable');
+   semanticIndex=await idxResp.json();
+   if(stored){
+    transformers.env.localModelPath='https://appassets.androidplatform.net/semantic-model/';
+    transformers.env.allowRemoteModels=false;
+    transformers.env.useBrowserCache=false;
+   }else{
+    console.warn('Persistent model download unavailable; using Transformers.js remote fallback.');
+   }
+   semanticPipeline=await transformers.pipeline('feature-extraction','Xenova/all-MiniLM-L6-v2',{quantized:true});
+   return true;
+  }catch(err){
+   console.warn('Semantic search unavailable; using fuzzy search.',err);
+   semanticIndex=null;semanticPipeline=null;semanticLoadPromise=null;
+   return false;
+  }
+ })();
+ return semanticLoadPromise;
+}
+function semanticCosine(queryVector, packed){
+ let dot=0, qn=0, pn=0;
+ const n=Math.min(queryVector.length,packed.length);
+ for(let i=0;i<n;i++){
+  const q=queryVector[i],p=packed[i]/127;
+  dot+=q*p;qn+=q*q;pn+=p*p;
+ }
+ return qn&&pn?dot/Math.sqrt(qn*pn):0;
+}
+async function runSemanticSearch(query,version){
+ const ok=await loadSemanticSearch();
+ if(!ok || version!==semanticQueryVersion)return;
+ try{
+  const result=await semanticPipeline(query,{pooling:'mean',normalize:true});
+  const qv=Array.from(result.data);
+  const byId=new Map();
+  for(let i=0;i<semanticIndex.ids.length;i++){
+   const id=semanticIndex.ids[i],vec=semanticIndex.vectors[i];
+   byId.set(id,semanticCosine(qv,vec));
+  }
+  if(version!==semanticQueryVersion)return;
+  semanticScores=byId;
+  $('status').textContent='Semantic search ready.';
+  applyFilter();
+ }catch(err){
+  console.warn('Semantic query failed; using fuzzy search.',err);
+  semanticScores=null;
+ }
+}
+
+
+// Background preload starts only after the UI has rendered. It downloads the model
+// into Android's persistent internal files directory, then loads it for this session.
+function scheduleSemanticPreload(){
+ const start=()=>{loadSemanticSearch().then(ok=>{
+  if(ok && !$('search').value.trim()) $('status').textContent='Semantic search ready.';
+ }).catch(()=>{});};
+ if('requestIdleCallback' in window){requestIdleCallback(start,{timeout:8000});}
+ else{setTimeout(start,1800);}
+}
+
+
+// Pull the latest catalogue and semantic index from the app's private storage.
+// Native Android sync is also scheduled periodically by WorkManager while the app is closed.
+async function refreshFromPersistentSemanticData(){
+ try{
+  const [catResp,idxResp]=await Promise.all([
+   fetch('https://appassets.androidplatform.net/semantic-data/catalogue.json',{cache:'no-store'}),
+   fetch('https://appassets.androidplatform.net/semantic-data/semantic-index.json',{cache:'no-store'})
+  ]);
+  if(catResp && catResp.ok){
+   const rows=await catResp.json();
+   const latest=validRows(rows);
+   if(latest.length){
+    const watched=watchedSet();
+    videos=latest;
+    save();years();applyFilter();
+    $('catalogueStatus').textContent=`${videos.length.toLocaleString()} videos available on this device.`;
+   }
+  }
+  if(idxResp && idxResp.ok){
+   const latestIndex=await idxResp.json();
+   if(Array.isArray(latestIndex.ids)&&Array.isArray(latestIndex.vectors)){
+    semanticIndex=latestIndex;
+    if($('search').value.trim()){
+     const version=++semanticQueryVersion;
+     runSemanticSearch($('search').value.trim(),version);
+    }
+   }
+  }
+ }catch(e){console.warn('Could not refresh local semantic data',e)}
+}
+const GITHUB_SYNC_LAST_CHECK='p0_github_sync_last_check';
+function setGitHubSyncState(state,message,detail){
+ const panel=$('githubSyncPanel');
+ if(!panel)return;
+ panel.classList.remove('checking','success','error');
+ if(state)panel.classList.add(state);
+ $('syncStatus').textContent=message;
+ if(detail)$('githubSyncDetail').textContent=detail;
+}
+function restoreGitHubSyncLastCheck(){
+ try{
+  const stamp=localStorage.getItem(GITHUB_SYNC_LAST_CHECK);
+  if(stamp){
+   const date=new Date(Number(stamp));
+   if(!isNaN(date.getTime()))$('githubSyncDetail').textContent='Last checked on this device: '+date.toLocaleString()+'. The app checks GitHub’s published manifest, not the Actions run directly.';
+  }
+ }catch{}
+}
+window.onSemanticSyncProgress=(stage,detail)=>{
+ const labels={manifest:'Reading GitHub manifest…',compare:'Comparing published versions…',catalogue:'Downloading catalogue…',index:'Downloading semantic index…',verify:'Verifying downloaded files…',install:'Saving verified updates…',complete:'Update check complete'};
+ const message=detail||labels[stage]||'Checking GitHub…';
+ if($('syncStage'))$('syncStage').textContent=message;
+ setGitHubSyncState('checking',message,'The app is checking GitHub’s published data.');
+};
+window.onSemanticDataSynced=async ok=>{
+ const checkedAt=Date.now();
+ try{localStorage.setItem(GITHUB_SYNC_LAST_CHECK,String(checkedAt))}catch{}
+ if(ok){
+  if($('syncStage'))$('syncStage').textContent='Finished. The app has the latest published catalogue and semantic index.';
+  setGitHubSyncState('success','GitHub check completed successfully','Last checked: '+new Date(checkedAt).toLocaleString()+'. Any newer published files were downloaded; if nothing changed, the existing data remains current.');
+  await refreshFromPersistentSemanticData();
+ }else{
+  if($('syncStage'))$('syncStage').textContent='The check could not be completed. Previously saved data is unchanged.';
+  setGitHubSyncState('error','GitHub update check failed','Last attempt: '+new Date(checkedAt).toLocaleString()+'. Your previously saved catalogue and semantic index are being kept.');
+ }
+ if($('githubSyncRefresh'))$('githubSyncRefresh').disabled=false;
+};
+function setRemoteWebUpdateState(state,message,detail){
+ const panel=$('remoteWebUpdatePanel');
+ if(!panel)return;
+ panel.classList.remove('checking','success','error');
+ if(state)panel.classList.add(state);
+ $('remoteWebUpdateStatus').textContent=message;
+ if(detail)$('remoteWebUpdateDetail').textContent=detail;
+}
+window.onRemoteWebUpdateChecked=result=>{
+ result=result||{};
+ const status=result.status||'error';
+ const version=result.version?(' Version: '+result.version.slice(0,12)+'.'):'';
+ if(status==='current'){
+  setRemoteWebUpdateState('success','App features are up to date.',(result.message||'No update is needed.')+version);
+  $('remoteWebUpdateRestart').style.display='none';
+ }else if(status==='staged'||status==='pending'){
+  setRemoteWebUpdateState('success','A new app update is ready.',(result.message||'Restart the app to apply it.')+version);
+  $('remoteWebUpdateRestart').style.display='inline-block';
+ }else if(status==='native_required'){
+  setRemoteWebUpdateState('error','A newer Android APK is required.',result.message||'Install the latest APK to continue.');
+  $('remoteWebUpdateRestart').style.display='none';
+ }else{
+  setRemoteWebUpdateState('error','Could not check for app updates.',result.message||'Your currently installed app remains available.');
+  $('remoteWebUpdateRestart').style.display='none';
+ }
+ if($('remoteWebUpdateCheck'))$('remoteWebUpdateCheck').disabled=false;
+};
+function checkRemoteWebUpdate(){
+ if(!window.AndroidSemanticStorage || typeof window.AndroidSemanticStorage.checkRemoteWebUpdate!=='function'){
+  setRemoteWebUpdateState('error','In-app updates are unavailable.','This requires the updated Android app build.');
+  return;
+ }
+ setRemoteWebUpdateState('checking','Checking for app feature updates…','Checking GitHub for a verified web-app package.');
+ if($('remoteWebUpdateCheck'))$('remoteWebUpdateCheck').disabled=true;
+ try{window.AndroidSemanticStorage.checkRemoteWebUpdate('onRemoteWebUpdateChecked')}
+ catch(e){setRemoteWebUpdateState('error','Could not start the update check.',String(e));if($('remoteWebUpdateCheck'))$('remoteWebUpdateCheck').disabled=false}
+}
+$('remoteWebUpdateCheck').addEventListener('click',checkRemoteWebUpdate);
+$('remoteWebUpdateRestart').addEventListener('click',()=>{
+ if(window.AndroidSemanticStorage && typeof window.AndroidSemanticStorage.restartForRemoteWebUpdate==='function')window.AndroidSemanticStorage.restartForRemoteWebUpdate();
+});
+
+function startSemanticDataSync(){
+ if(!window.AndroidSemanticStorage || typeof window.AndroidSemanticStorage.syncDataNow!=='function'){
+  setGitHubSyncState('error','GitHub sync is unavailable','This feature requires the Android app and its native synchronization bridge.');
+  return;
+ }
+ setGitHubSyncState('checking','Checking GitHub for published updates…','Checking the manifest for a newer catalogue or semantic index.');
+ if($('githubSyncRefresh'))$('githubSyncRefresh').disabled=true;
+ try{window.AndroidSemanticStorage.syncDataNow('onSemanticDataSynced','onSemanticSyncProgress')}
+ catch(e){
+  setGitHubSyncState('error','Could not start the GitHub check','Your previously saved data remains available.');
+  if($('githubSyncRefresh'))$('githubSyncRefresh').disabled=false;
+ }
+}
+
+function applyFilter(){
+ const q=$('search').value.trim(),y=$('year').value,sort=$('sort').value,seen=watchedSet();
+ let rows=videos.filter(v=>(y==='all'||new Date(v.publishedAt).getFullYear()==+y)&&(!onlyUnwatched||!seen.has(v.id)));
+ if(activeChip==='unwatched')rows=rows.filter(v=>!seen.has(v.id));
+ if(q){
+  rows=rows.map(v=>{
+    const fuzzy=searchScore(v.title,q);
+    const semantic=semanticScores && semanticScores.has(v.id) ? semanticScores.get(v.id) : null;
+    // Semantic similarity leads when available; fuzzy title matching breaks ties and
+    // remains the fallback for videos not present in the semantic index.
+    const score=semantic===null ? (fuzzy>0?fuzzy/1000:0) : (semantic*0.82 + Math.max(0,fuzzy/1000)*0.18);
+    return {v,score};
+   })
+   .filter(x=>x.score>0.12)
+   .sort((a,b)=>b.score-a.score||Date.parse(b.v.publishedAt)-Date.parse(a.v.publishedAt))
+   .map(x=>x.v);
+ }else{
+  rows.sort((a,b)=>sort==='old'?Date.parse(a.publishedAt)-Date.parse(b.publishedAt):Date.parse(b.publishedAt)-Date.parse(a.publishedAt));
+ }
+ if(activeChip==='latest'&&!q)rows=rows.slice(0,80);
+ view=rows;
+ render();
+}
+function card(v){return `<article class="video-card" data-id="${v.id}"><div class="thumbwrap"><img class="thumb" loading="lazy" decoding="async" fetchpriority="low" src="${esc(v.thumb)}" alt=""><span class="duration">${new Date(v.publishedAt).getFullYear()}</span></div><div class="video-info"><div class="avatar">P</div><div class="video-copy"><div class="video-title">${esc(v.title)}</div><div class="video-meta">Penguinz0<br>${new Date(v.publishedAt).toLocaleDateString()} · ${watchedSet().has(v.id)?'Watched':'Video'}</div></div><button class="more" aria-label="More">⋮</button></div></article>`}
+
+let shortsOrder=[],shortsCursor=0,shortsActiveId=null,shortsObserver=null;
+function stopShort(card){
+ if(!card)return;
+ card.classList.remove('is-playing');
+ const f=card.querySelector('iframe');
+ if(f)f.remove();
+ if(window.AndroidBackgroundPlayback&&AndroidBackgroundPlayback.onPlaybackPaused)AndroidBackgroundPlayback.onPlaybackPaused();
+}
+function activateShort(card){
+ const v=videos.find(x=>x.id===card.dataset.id);if(!v)return;
+ if(card.classList.contains('is-playing'))return;
+ document.querySelectorAll('.short-card.is-playing').forEach(stopShort);
+ card.classList.add('is-playing');shortsActiveId=v.id;
+ card.classList.toggle('stretch-video',getShortsDisplay()==='stretched');
+ card.insertAdjacentHTML('afterbegin',`<iframe class="short-iframe" src="https://www.youtube.com/embed/${v.id}?autoplay=1&playsinline=1&controls=1&rel=0&enablejsapi=1&origin=https%3A%2F%2Fappassets.androidplatform.net" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="${esc(v.title)}"></iframe>`);
+ if(window.AndroidBackgroundPlayback&&AndroidBackgroundPlayback.onPlaybackStarted)AndroidBackgroundPlayback.onPlaybackStarted(v.title);
+}
+function observeShortCards(){
+ if(!shortsObserver){
+  shortsObserver=new IntersectionObserver(entries=>{
+   if(activePage!=='shortsPage')return;
+   // Scrolling only browses thumbnails. Never start playback automatically.
+   // If the user scrolls away from a manually-started video, remove its player
+   // so audio cannot continue off-screen.
+   entries.forEach(entry=>{
+    if(entry.target.classList.contains('is-playing') &&
+       (!entry.isIntersecting || entry.intersectionRatio<0.2)){
+     stopShort(entry.target);
+     shortsActiveId=null;
+    }
+   });
+   const last=shortsGridLastCard();
+   if(last && shortsCursor<shortsOrder.length){
+    const r=last.getBoundingClientRect(),root=$('shortsGrid').getBoundingClientRect();
+    if(r.top<root.bottom+root.height*1.5)appendShorts(8);
+   }
+  },{root:$('shortsGrid'),threshold:[0.2,0.45,0.68,0.85]});
+ }
+ document.querySelectorAll('.short-card:not([data-observed])').forEach(card=>{
+  card.dataset.observed='1';shortsObserver.observe(card);
+ });
+}
+function shortsGridLastCard(){return $('shortsGrid').lastElementChild}
+function shuffleShorts(){
+ if(shortsObserver){shortsObserver.disconnect();shortsObserver=null}
+ shortsOrder=videos.slice();
+ for(let i=shortsOrder.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [shortsOrder[i],shortsOrder[j]]=[shortsOrder[j],shortsOrder[i]];
+ }
+ shortsCursor=0;shortsActiveId=null;
+ $('shortsGrid').innerHTML='';
+ appendShorts(8);
+ $('shortsGrid').scrollTop=0;
+}
+function appendShorts(amount=8){
+ const batch=shortsOrder.slice(shortsCursor,shortsCursor+amount);
+ shortsCursor+=batch.length;
+ $('shortsGrid').insertAdjacentHTML('beforeend',batch.map(v=>`
+  <article class="short-card" data-id="${v.id}" aria-label="${esc(v.title)}">
+   <img class="short-thumb" loading="lazy" decoding="async" fetchpriority="low" src="${esc(v.thumb)}" alt="">
+   <div class="short-shade"></div><div class="short-play">▶</div>
+   <div class="short-title">${esc(v.title)}</div>
+  </article>`).join(''));
+ $('shortsMore').style.display=shortsCursor<shortsOrder.length?'block':'none';
+ observeShortCards();
+}
+
+function render(){$('count').textContent=view.length.toLocaleString()+' videos';$('grid').innerHTML=view.slice(0,100).map(card).join('')||'<div class="empty">No videos found. Try another search or year.</div>';if(!shortsOrder.length && videos.length) shuffleShorts();$('libraryGrid').innerHTML=videos.filter(v=>watchedSet().has(v.id)).slice(0,100).sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt)).map(card).join('')||'<div class="empty">Your watched videos will appear here.</div>';$('catalogueStatus').textContent=`${videos.length.toLocaleString()} videos available on this device.`;$('feedHeading').textContent=$('search').value?'Search results':activeChip==='latest'?'Latest uploads':activeChip==='unwatched'?'Not watched yet':$('year').value==='all'?'Videos for you':`Penguinz0 in ${$('year').value}`;$('feedSub').textContent='Only from Penguinz0'}
+// Keep the native PiP action connected to the existing YouTube iframe.
+window.p0PiPCommand=function(command){
+ const frames=[document.getElementById('frame'),...document.querySelectorAll('.short-iframe')].filter(Boolean);
+ frames.forEach(frame=>{try{frame.contentWindow.postMessage(JSON.stringify({event:'command',func:command,args:[]}), '*')}catch(e){}});
+};
+function play(v){if(!v)return;current=v;$('playerView').style.display='block';$('playingTitle').textContent=v.title;$('playingMeta').textContent=`Penguinz0 · ${new Date(v.publishedAt).toLocaleDateString()} · ${new Date(v.publishedAt).getFullYear()}`;$('frame').src='https://www.youtube.com/embed/'+v.id+'?autoplay=1&playsinline=1&enablejsapi=1&origin=https%3A%2F%2Fappassets.androidplatform.net';if(window.AndroidBackgroundPlayback&&AndroidBackgroundPlayback.onPlaybackStarted)AndroidBackgroundPlayback.onPlaybackStarted(v.title);$('playerView').scrollIntoView({behavior:'smooth',block:'start'})}
+function random(){if(view.length)play(view[Math.floor(Math.random()*view.length)]);else $('status').textContent='No videos available for this selection.'}
+function setChip(name){activeChip=name;document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active',b.dataset.filter===name));$('yearToolbar').hidden=name!=='year';if(name==='random')random();else if(name==='year'){$('yearToolbar').hidden=false;applyFilter()}else applyFilter()}
+function showPage(id){if(id==='shortsPage' && !shortsOrder.length)shuffleShorts();activePage=id;document.body.classList.toggle('shorts-mode',id==='shortsPage');document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'instant'});if(id==='shortsPage')setTimeout(()=>observeShortCards(),120);else document.querySelectorAll('.short-card.is-playing').forEach(stopShort)}
+const shortsModeSelect=$('shortsDisplayMode');
+if(shortsModeSelect){shortsModeSelect.value=getShortsDisplay();shortsModeSelect.addEventListener('change',()=>setShortsDisplay(shortsModeSelect.value))}
+$('githubSyncRefresh').addEventListener('click',startSemanticDataSync);
+restoreGitHubSyncLastCheck();
+$('grid').addEventListener('click',e=>{let c=e.target.closest('.video-card');if(c)play(videos.find(v=>v.id===c.dataset.id))});
+$('shortsGrid').addEventListener('click',e=>{let c=e.target.closest('.short-card');if(c)activateShort(c)});
+$('shortsMore').onclick=()=>appendShorts(8);
+$('reshuffleShorts').onclick=shuffleShorts;
+
+$('libraryGrid').addEventListener('click',e=>{let c=e.target.closest('.video-card');if(c)play(videos.find(v=>v.id===c.dataset.id))});
+$('searchForm').onsubmit=e=>{e.preventDefault();setChip('all');semanticScores=null;applyFilter();const q=$('search').value.trim();if(q){const version=++semanticQueryVersion;$('status').textContent='Finding meaning-based matches…';runSemanticSearch(q,version)}};
+let st;$('search').oninput=()=>{clearTimeout(st);st=setTimeout(()=>{semanticScores=null;applyFilter();const q=$('search').value.trim();if(q){const version=++semanticQueryVersion;$('status').textContent='Searching titles; preparing semantic matches…';runSemanticSearch(q,version)}else{semanticQueryVersion++;$('status').textContent=''}} ,250)};
+$('chips').onclick=e=>{let b=e.target.closest('.chip');if(b)setChip(b.dataset.filter)};
+$('shuffleTop').onclick=random;$('again').onclick=random;$('year').onchange=applyFilter;$('sort').onchange=applyFilter;
+$('watched').onclick=()=>{if(current){let s=watchedSet();s.add(current.id);try{localStorage.setItem(WATCH,JSON.stringify([...s]))}catch{}applyFilter()}};
+$('open').onclick=()=>{if(current)location.href='https://www.youtube.com/watch?v='+current.id};
+document.querySelectorAll('.navitem').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+$('showWatched').onclick=()=>{showPage('libraryPage');$('libraryGrid').innerHTML=videos.filter(v=>watchedSet().has(v.id)).slice(0,100).map(card).join('')||'<div class="empty">No watched videos yet.</div>'};
+$('showUnwatched').onclick=()=>{showPage('libraryPage');$('libraryGrid').innerHTML=videos.filter(v=>!watchedSet().has(v.id)).slice(0,100).map(card).join('')||'<div class="empty">No unwatched videos.</div>'};
+$('showAll').onclick=()=>{showPage('homePage');setChip('all')};
+$('import').onclick=()=>$('file').click();
+$('file').onchange=async e=>{try{let obj=JSON.parse(await e.target.files[0].text());videos=validRows(Array.isArray(obj)?obj:(obj.videos||[]));save();years();applyFilter();$('status').textContent=`Imported ${videos.length} videos.`}catch{$('status').textContent='Could not read JSON catalogue.'}};
+let bundled=Array.isArray(window.P0_CATALOGUE)?validRows(window.P0_CATALOGUE):[],saved=localStorage.getItem(KEY);
+if(saved){try{const cached=validRows(JSON.parse(saved));videos=cached.length?cached:bundled}catch{videos=bundled}}else videos=bundled;
+if(videos.length){save();years();applyFilter();$('status').textContent=`Loaded ${videos.length.toLocaleString()} Penguinz0 videos.`}else $('status').textContent='Catalogue is empty. The GitHub catalogue-fetch step must complete successfully.';
+// Correctly placed inside the app's executable script: preload after first paint.
+setTimeout(scheduleSemanticPreload,700);
+setTimeout(startSemanticDataSync,1200);
+
+// Smooth, one-shot black-line surf animation. Frozen at rest; click runs left-to-right, then freezes.
+(()=>{
+ const button=document.getElementById('again');
+ if(!button || button.dataset.surfWaveReady==='1')return;
+ button.dataset.surfWaveReady='1';
+ button.style.position='relative';
+ button.style.overflow='hidden';
+ button.style.isolation='isolate';
+ const label=document.createElement('span');
+ label.className='surf-wave-label';
+ label.style.cssText='position:relative;z-index:3;display:inline-block;white-space:nowrap;transform-origin:50% 100%;will-change:transform;';
+ while(button.firstChild)label.appendChild(button.firstChild);
+ button.appendChild(label);
+ const style=document.createElement('style');
+ style.textContent=`
+ /* GPU-friendly micro-interactions: short, restrained, and disabled for reduced motion. */
+ .pillbtn,.iconbtn,.chip,.navitem,.searchwrap button,.toolbar select,.settingsbox button{transition:transform .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease,opacity .16s ease}
+ .pillbtn:active,.iconbtn:active,.chip:active,.navitem:active,.searchwrap button:active,.settingsbox button:active{transform:scale(.96)}
+ .video-card .thumbwrap{transition:transform .2s ease,box-shadow .2s ease}
+ @media(hover:hover) and (pointer:fine){.video-card:hover .thumbwrap{transform:translateY(-2px);box-shadow:0 7px 22px rgba(0,0,0,.24)}}
+ .searchwrap input{transition:border-color .16s ease,box-shadow .16s ease}
+ .searchwrap input:focus{box-shadow:0 0 0 3px rgba(61,117,189,.16)}
+ .page.active{animation:p0PageEnter .18s ease-out both}
+ @keyframes p0PageEnter{from{opacity:.72;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+ #again .surf-wave-lines{position:absolute;inset:0 auto 0 0;width:200%;height:100%;z-index:2;pointer-events:none;overflow:hidden;opacity:1;transform:translate3d(-12.5%,0,0);backface-visibility:hidden;will-change:transform;contain:paint}
+ #again .surf-wave-lines path{fill:none;stroke:#111;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+ #again .surf-wave-lines .wave-secondary{stroke-width:1.05;opacity:.72}
+ #again .surf-wave-lines .wave-tertiary{stroke-width:.8;opacity:.48}
+ #again .surf-wave-lines.surfing{animation:surfWaveRun 2.8s linear forwards}
+ #again .surf-wave-label.surfing{animation:surfTextRun 2.8s cubic-bezier(.22,.61,.36,1) forwards}
+ @keyframes surfWaveRun{from{transform:translate3d(-12.5%,0,0)}to{transform:translate3d(0,0,0)}}
+ @keyframes surfTextRun{0%,100%{transform:translate3d(0,0,0) rotate(0)}22%{transform:translate3d(0,-2px,0) rotate(-.65deg)}48%{transform:translate3d(0,1px,0) rotate(.4deg)}72%{transform:translate3d(0,-1px,0) rotate(-.25deg)}}
+ @media(prefers-reduced-motion:reduce){.page.active{animation:none!important}.pillbtn,.iconbtn,.chip,.navitem,.searchwrap button,.toolbar select,.settingsbox button,.video-card .thumbwrap,.searchwrap input{transition:none!important}#again .surf-wave-label.surfing,#again .surf-wave-lines.surfing{animation:none!important}}
+ `;
+ document.head.appendChild(style);
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.setAttribute('viewBox','0 0 640 56');svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('aria-hidden','true');svg.classList.add('surf-wave-lines');
+ // A periodic, tangent-matched curve prevents a visible seam where the wave tiles meet.
+ const basePaths=[
+  ['wave-main','M0 28 C20 28 20 8 40 8 C60 8 60 28 80 28 C100 28 100 48 120 48 C140 48 140 28 160 28 C180 28 180 8 200 8 C220 8 220 28 240 28 C260 28 260 48 280 48 C300 48 300 28 320 28'],
+  ['wave-secondary','M0 28 C20 28 20 13 40 13 C60 13 60 28 80 28 C100 28 100 43 120 43 C140 43 140 28 160 28 C180 28 180 13 200 13 C220 13 220 28 240 28 C260 28 260 43 280 43 C300 43 300 28 320 28'],
+  ['wave-tertiary','M0 28 C20 28 20 18 40 18 C60 18 60 28 80 28 C100 28 100 38 120 38 C140 38 140 28 160 28 C180 28 180 18 200 18 C220 18 220 28 240 28 C260 28 260 38 280 38 C300 38 300 28 320 28']
+ ];
+ for(const [cls,d] of basePaths){
+   for(let copy=0;copy<2;copy++){
+     const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+     path.setAttribute('d',d);
+     if(copy)path.setAttribute('transform','translate(320 0)');
+     path.classList.add(cls);svg.appendChild(path);
+   }
+ }
+ button.appendChild(svg);
+ button.addEventListener('click',()=>{
+   if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+   svg.classList.remove('surfing');label.classList.remove('surfing');
+   // Restart on the next frame instead of forcing synchronous layout (which caused jank).
+   requestAnimationFrame(()=>{svg.classList.add('surfing');label.classList.add('surfing')});
+ },{passive:true});
+})();
+</script>
+</body></html>
