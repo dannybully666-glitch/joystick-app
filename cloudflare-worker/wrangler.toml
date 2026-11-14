@@ -1,0 +1,9 @@
+name = "penguinz0-live-catalogue"
+main = "worker.js"
+compatibility_date = "2026-11-14"
+
+[vars]
+WORKER_URL = "https://YOUR-WORKER.workers.dev"
+
+[triggers]
+crons = ["0 */12 * * *"]
