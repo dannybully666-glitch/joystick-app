@@ -1,0 +1,98 @@
+name: Build Penguinz0 Player APK
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    name: Fetch catalogue and build APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+
+      - name: Install Android SDK platform and build tools
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install latest yt-dlp nightly
+        run: python -m pip install --upgrade --pre yt-dlp
+
+      - name: Fetch Penguinz0 public video catalogue
+        run: python scripts/fetch_catalogue.py
+
+      - name: Verify generated catalogue
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          path = Path("app/src/main/assets/catalogue.js")
+          if not path.exists():
+              raise SystemExit(f"Missing catalogue file: {path}")
+
+          text = path.read_text(encoding="utf-8").strip()
+          marker = "window.P0_CATALOGUE"
+          marker_pos = text.find(marker)
+          if marker_pos < 0:
+              raise SystemExit(
+                  "catalogue.js does not contain the expected "
+                  "'window.P0_CATALOGUE' assignment. "
+                  "Expected: window.P0_CATALOGUE = [...];"
+              )
+
+          equals_pos = text.find("=", marker_pos + len(marker))
+          semicolon_pos = text.rfind(";")
+          if equals_pos < 0 or semicolon_pos <= equals_pos:
+              raise SystemExit("catalogue.js has an invalid P0_CATALOGUE assignment.")
+
+          payload = text[equals_pos + 1:semicolon_pos].strip()
+          try:
+              rows = json.loads(payload)
+          except json.JSONDecodeError as exc:
+              raise SystemExit(f"P0_CATALOGUE is not valid JSON: {exc}")
+
+          if not isinstance(rows, list):
+              raise SystemExit("P0_CATALOGUE must be a JSON array.")
+
+          print(f"Catalogue ready: {len(rows)} videos")
+          if not rows:
+              raise SystemExit("Refusing to build an APK with an empty catalogue.")
+          PY
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        run: gradle --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Penguinz0-Player-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
