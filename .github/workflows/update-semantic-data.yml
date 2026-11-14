@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: pip
 
       - name: Install catalogue and embedding dependencies
         run: |
@@ -130,3 +129,4 @@ jobs:
           publish_dir: ./publish
           force_orphan: true
           commit_message: 'Update Penguinz0 catalogue and semantic index'
+          
