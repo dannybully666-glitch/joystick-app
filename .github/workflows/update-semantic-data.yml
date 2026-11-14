@@ -1,0 +1,163 @@
+name: Update Penguinz0 catalogue and semantic index
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'scripts/fetch_catalogue.py'
+      - 'scripts/build_semantic_index.py'
+      - 'app/src/main/assets/**'
+      - '.github/workflows/update-semantic-data.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: penguinz0-semantic-data
+  cancel-in-progress: false
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out app repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install catalogue and embedding dependencies
+        run: |
+          python -m pip install --upgrade --pre yt-dlp
+          python -m pip install numpy
+
+      - name: Retrieve previous published data
+        run: |
+          mkdir -p previous publish/semantic
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch --depth=1 origin gh-pages
+            git show origin/gh-pages:semantic/catalogue.json > previous/catalogue.json 2>/dev/null || true
+            git show origin/gh-pages:semantic/semantic-index.json > previous/semantic-index.json 2>/dev/null || true
+          fi
+          if [ -s previous/catalogue.json ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          rows=json.loads(Path("previous/catalogue.json").read_text())
+          Path("app/src/main/assets/catalogue.js").write_text(
+              "window.P0_CATALOGUE = "+json.dumps(rows,ensure_ascii=False,separators=(",",":"))+";\n",
+              encoding="utf-8")
+          PY
+          fi
+
+      - name: Fetch latest public uploads
+        run: python scripts/fetch_catalogue.py
+
+      - name: Export catalogue JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          text=Path("app/src/main/assets/catalogue.js").read_text(encoding="utf-8")
+          prefix="window.P0_CATALOGUE ="
+          if not text.startswith(prefix):
+              raise SystemExit("Invalid catalogue assignment")
+          rows=json.loads(text[len(prefix):].strip().removesuffix(";"))
+          if not rows:
+              raise SystemExit("Refusing to publish empty catalogue")
+          Path("publish/semantic/catalogue.json").write_text(
+              json.dumps(rows,ensure_ascii=False,separators=(",",":")),encoding="utf-8")
+          print(f"Prepared {len(rows)} catalogue entries")
+          PY
+
+      - name: Check whether new embeddings are needed
+        id: embedding-check
+        run: |
+          ARGS=""
+          if [ -s previous/semantic-index.json ]; then
+            ARGS="--previous-index previous/semantic-index.json"
+          fi
+          python scripts/build_semantic_index.py --catalogue app/src/main/assets/catalogue.js --output publish/semantic/semantic-index.json --check-only $ARGS | tee /tmp/embedding-check.txt
+          grep -q 'needs_embedding=true' /tmp/embedding-check.txt && echo "needs_embedding=true" >> "$GITHUB_OUTPUT" || echo "needs_embedding=false" >> "$GITHUB_OUTPUT"
+
+      - name: Install embedding model runtime only when needed
+        if: steps.embedding-check.outputs.needs_embedding == 'true'
+        run: python -m pip install sentence-transformers
+
+      - name: Build only new or changed semantic embeddings
+        run: |
+          ARGS=""
+          if [ -s previous/semantic-index.json ]; then
+            ARGS="--previous-index previous/semantic-index.json"
+          fi
+          python scripts/build_semantic_index.py --catalogue app/src/main/assets/catalogue.js --output publish/semantic/semantic-index.json $ARGS
+
+      - name: Create version manifest and checksums
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("publish/semantic")
+          cat=(root/"catalogue.json").read_bytes()
+          idx=(root/"semantic-index.json").read_bytes()
+          cat_hash=hashlib.sha256(cat).hexdigest()
+          idx_hash=hashlib.sha256(idx).hexdigest()
+          manifest={
+            "schema":1,
+            "catalogue_version":cat_hash,
+            "semantic_version":idx_hash,
+            "catalogue_sha256":cat_hash,
+            "semantic_index_sha256":idx_hash,
+            "catalogue_url":"https://raw.githubusercontent.com/dannybully666-glitch/joystick-app/gh-pages/semantic/catalogue.json",
+            "semantic_index_url":"https://raw.githubusercontent.com/dannybully666-glitch/joystick-app/gh-pages/semantic/semantic-index.json"
+          }
+          (root/"manifest.json").write_text(json.dumps(manifest,separators=(",",":")),encoding="utf-8")
+          print("Manifest prepared:",json.dumps(manifest))
+          PY
+
+      - name: Package remotely updateable app files
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, zipfile
+          from pathlib import Path
+          assets = Path("app/src/main/assets")
+          output = Path("publish/remote-app")
+          output.mkdir(parents=True, exist_ok=True)
+          required = [assets / "index.html", assets / "catalogue.js"]
+          for item in required:
+              if not item.is_file() or item.stat().st_size == 0:
+                  raise SystemExit(f"Required remote app file is missing or empty: {item}")
+          archive = output / "app.zip"
+          files = sorted(p for p in assets.rglob("*") if p.is_file())
+          with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+              for item in files:
+                  z.write(item, item.relative_to(assets).as_posix())
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+          manifest = {
+              "schema": 1,
+              "version": digest,
+              "bundle_sha256": digest,
+              "bundle_url": "https://raw.githubusercontent.com/dannybully666-glitch/joystick-app/gh-pages/remote-app/app.zip",
+              "min_native_version_code": 1
+          }
+          (output / "manifest.json").write_text(json.dumps(manifest, separators=(",", ":")), encoding="utf-8")
+          print(f"Packaged {len(files)} remote app files; archive size={archive.stat().st_size} bytes; version={digest[:12]}")
+          PY
+
+      - name: Publish data to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./publish
+          force_orphan: true
+          commit_message: 'Update Penguinz0 data and remotely updateable app'
