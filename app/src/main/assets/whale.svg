@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="Blue whale">
+<defs>
+ <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9bbcff"/><stop offset=".48" stop-color="#587fe0"/><stop offset="1" stop-color="#294b9b"/></linearGradient>
+ <linearGradient id="belly" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dce9ff"/><stop offset="1" stop-color="#829ed8"/></linearGradient>
+</defs>
+<!-- Side-profile whale looking left, with its head emerging behind the title. -->
+<path d="M45 78 C57 42 104 24 157 38 C184 45 201 60 215 72 C224 80 230 83 239 82 C231 92 219 99 205 101 C184 124 151 134 111 126 C78 120 53 105 45 91 C37 88 27 89 16 95 C22 84 31 79 45 78Z" fill="url(#body)" stroke="#b8d0ff" stroke-opacity=".72" stroke-width="3"/>
+<path d="M62 91 C94 108 150 113 200 98 C183 119 151 130 113 124 C88 120 69 109 62 91Z" fill="url(#belly)" opacity=".82"/>
+<path d="M110 40 C105 23 91 14 78 10 C84 27 90 39 102 48Z" fill="#6388e6" stroke="#b8d0ff" stroke-width="2"/>
+<path d="M195 63 C207 52 219 48 233 50 C225 61 220 70 215 82Z" fill="#5278d6"/>
+<path d="M199 100 C211 110 220 120 222 132 C208 124 196 119 184 116Z" fill="#5278d6"/>
+<path d="M47 78 C35 71 24 66 12 68 C20 78 27 84 40 88Z" fill="#7297ed"/>
+<ellipse cx="58" cy="76" rx="5.8" ry="6.8" fill="#07152b"/>
+<circle cx="56.5" cy="73.5" r="1.8" fill="#fff"/>
+<path d="M29 98 Q39 103 52 101" fill="none" stroke="#d4e2ff" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+<path d="M90 56 Q122 43 158 52" fill="none" stroke="#d7e5ff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+<path d="M102 66 Q130 58 155 64" fill="none" stroke="#d7e5ff" stroke-opacity=".2" stroke-width="2" stroke-linecap="round"/>
+</svg>
