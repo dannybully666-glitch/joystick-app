@@ -1,0 +1,11 @@
+name = "penguinz0-live-catalogue"
+main = "worker.js"
+compatibility_date = "2026-11-20"
+
+[vars]
+# Set this to the deployed Worker URL after first deployment.
+WORKER_URL = "https://penguinz0-live-catalogue.dannybully666.workers.dev"
+
+
+[triggers]
+crons = ["0 */12 * * *"]
