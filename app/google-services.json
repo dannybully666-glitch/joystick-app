@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "863340691521",
+    "project_id": "penguinz0-player",
+    "storage_bucket": "penguinz0-player.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863340691521:android:e1d403e583863459c646c0",
+        "android_client_info": {
+          "package_name": "com.example.penguinz0player"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9dwLh8NGanUcFJvXqJujST-QHS4HDP5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
