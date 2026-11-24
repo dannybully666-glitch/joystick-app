@@ -1,11 +1,6 @@
 package com.example.penguinz0player;
 
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import com.google.firebase.messaging.FirebaseMessaging;
 import android.app.PictureInPictureParams;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -45,7 +40,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
-    private static volatile MainActivity activeInstance;
     private static final String TAG = "Penguinz0WebView";
     private FrameLayout root;
     private WebView webView;
@@ -60,7 +54,6 @@ public class MainActivity extends Activity {
     private File remoteWebDir;
     private final ExecutorService remoteUpdateExecutor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean remoteUpdateInProgress = new AtomicBoolean(false);
-    private volatile long activeRemoteUpdateRequestId = -1L;
     private boolean remoteUpdateCheckedThisLaunch = false;
     private int lastWebViewWidth = -1;
     private int lastWebViewHeight = -1;
@@ -76,30 +69,8 @@ public class MainActivity extends Activity {
         "special_tokens_map.json", "vocab.txt", "onnx/model_quantized.onnx"
     };
 
-    private void captureNotificationIntent(Intent intent) {
-        if (intent == null) return;
-        String videoId = intent.getStringExtra("videoId");
-        if (videoId == null || !videoId.matches("[A-Za-z0-9_-]{11}")) return;
-        String title = intent.getStringExtra("gcm.n.title");
-        if (title == null) title = intent.getStringExtra("title");
-        String body = intent.getStringExtra("gcm.n.body");
-        if (body == null) body = intent.getStringExtra("body");
-        P0FirebaseMessagingService.storeNotification(getApplicationContext(),
-                title == null ? "New Penguinz0 upload" : title,
-                body == null ? "New upload received — semantic build started." : body,
-                videoId);
-    }
-
-    @Override public void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        captureNotificationIntent(intent);
-    }
-
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activeInstance = this;
-        captureNotificationIntent(getIntent());
         getWindow().setStatusBarColor(Color.rgb(16,16,16));
         getWindow().setNavigationBarColor(Color.rgb(16,16,16));
         root = new FrameLayout(this);
@@ -142,7 +113,6 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new SemanticStorageBridge(), "AndroidSemanticStorage");
         webView.addJavascriptInterface(new BackgroundPlaybackBridge(), "AndroidBackgroundPlayback");
         webView.addJavascriptInterface(new PictureInPictureBridge(), "AndroidPictureInPicture");
-        webView.addJavascriptInterface(new NotificationsBridge(), "AndroidNotifications");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override public android.webkit.WebResourceResponse shouldInterceptRequest(
@@ -152,7 +122,6 @@ public class MainActivity extends Activity {
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 Log.i(TAG, "Web page finished: " + url);
-                view.evaluateJavascript("if(window.p0RefreshNotificationBadge)window.p0RefreshNotificationBadge();", null);
                 if (!remoteUpdateCheckedThisLaunch && url != null && url.contains("/remote/index.html")) {
                     remoteUpdateCheckedThisLaunch = true;
                     view.postDelayed(() -> checkRemoteWebNow("onRemoteWebUpdateChecked"), 900);
@@ -206,18 +175,12 @@ public class MainActivity extends Activity {
         webView.loadUrl("https://appassets.androidplatform.net/remote/index.html");
     }
 
-    @Override protected void onResume() {
-        super.onResume();
-        if (webView != null) webView.postDelayed(() ->
-                webView.evaluateJavascript("if(window.p0RefreshNotificationBadge)window.p0RefreshNotificationBadge();", null), 250);
-    }
-
     private void schedulePeriodicSemanticSync() {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
         PeriodicWorkRequest periodic = new PeriodicWorkRequest.Builder(
-                SemanticIndexSyncWorker.class, 1, TimeUnit.HOURS)
+                SemanticIndexSyncWorker.class, 6, TimeUnit.HOURS)
                 .setConstraints(constraints)
                 .build();
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
@@ -242,37 +205,23 @@ public class MainActivity extends Activity {
     }
 
     private void checkRemoteWebNow(final String callbackName) {
-        checkRemoteWebNow(callbackName, 0L, "onRemoteWebUpdateProgress");
+        checkRemoteWebNow(callbackName, 0L);
     }
 
-    private synchronized void checkRemoteWebNow(final String callbackName, final long requestId) {
-        checkRemoteWebNow(callbackName, requestId, null);
-    }
-
-    private synchronized void checkRemoteWebNow(final String callbackName, final long requestId,
-                                                final String progressCallbackName) {
+    private void checkRemoteWebNow(final String callbackName, final long requestId) {
         if (callbackName == null || !callbackName.matches("[A-Za-z_$][A-Za-z0-9_$]{0,63}")) return;
-        final String safeProgressCallback = progressCallbackName != null
-                && progressCallbackName.matches("[A-Za-z_$][A-Za-z0-9_$]{0,63}")
-                ? progressCallbackName : null;
         if (!remoteUpdateInProgress.compareAndSet(false, true)) {
             org.json.JSONObject busy = new org.json.JSONObject();
-            try {
-                busy.put("status", "busy");
-                busy.put("message", "An update check is already running.");
-                busy.put("active_request_id", activeRemoteUpdateRequestId);
-            } catch (org.json.JSONException ignored) {}
+            try { busy.put("status", "busy"); busy.put("message", "An update check is already running."); }
+            catch (org.json.JSONException ignored) {}
             deliverRemoteUpdateResult(callbackName, requestId, busy);
             return;
         }
-        activeRemoteUpdateRequestId = requestId;
         try {
             remoteUpdateExecutor.execute(() -> {
                 org.json.JSONObject result;
                 try {
-                    result = RemoteWebUpdateManager.checkAndStage(MainActivity.this,
-                            (stage, downloaded, total, message) -> deliverRemoteWebProgress(
-                                    safeProgressCallback, requestId, stage, downloaded, total, message));
+                    result = RemoteWebUpdateManager.checkAndStage(MainActivity.this);
                 } catch (Throwable error) {
                     Log.e(TAG, "Remote update check crashed", error);
                     result = new org.json.JSONObject();
@@ -281,36 +230,17 @@ public class MainActivity extends Activity {
                         result.put("message", error.getMessage() == null ? "Update check failed unexpectedly." : error.getMessage());
                     } catch (org.json.JSONException ignored) {}
                 } finally {
-                    activeRemoteUpdateRequestId = -1L;
                     remoteUpdateInProgress.set(false);
                 }
                 deliverRemoteUpdateResult(callbackName, requestId, result);
             });
         } catch (java.util.concurrent.RejectedExecutionException error) {
-            activeRemoteUpdateRequestId = -1L;
             remoteUpdateInProgress.set(false);
             org.json.JSONObject result = new org.json.JSONObject();
             try { result.put("status", "error"); result.put("message", "The update checker is restarting. Please try again."); }
             catch (org.json.JSONException ignored) {}
             deliverRemoteUpdateResult(callbackName, requestId, result);
         }
-    }
-
-    private void deliverRemoteWebProgress(String callbackName, long requestId, String stage,
-                                          long downloaded, long total, String message) {
-        if (callbackName == null || webView == null) return;
-        org.json.JSONObject progress = new org.json.JSONObject();
-        try {
-            progress.put("stage", stage);
-            progress.put("downloaded_bytes", downloaded);
-            progress.put("total_bytes", total);
-            progress.put("message", message == null ? "" : message);
-            runOnUiThread(() -> {
-                if (webView != null) webView.evaluateJavascript(
-                        "if(window." + callbackName + ")window." + callbackName + "("
-                                + requestId + "," + progress.toString() + ");", null);
-            });
-        } catch (org.json.JSONException ignored) {}
     }
 
     private void deliverRemoteUpdateResult(String callbackName, long requestId, org.json.JSONObject result) {
@@ -327,36 +257,12 @@ public class MainActivity extends Activity {
             checkRemoteWebNow(callbackName, requestId);
         }
 
-        @JavascriptInterface public void checkRemoteWebUpdate(final String callbackName,
-                                                              final long requestId,
-                                                              final String progressCallbackName) {
-            checkRemoteWebNow(callbackName, requestId, progressCallbackName);
-        }
-
         @JavascriptInterface public void restartForRemoteWebUpdate() {
             runOnUiThread(() -> {
                 android.content.Intent intent = getIntent();
                 finish();
                 startActivity(intent);
             });
-        }
-
-        // Manual forced builds are limited to one attempt per hour. This timestamp
-        // lives in native SharedPreferences, so WebView/localStorage resets cannot bypass it.
-        @JavascriptInterface public synchronized boolean claimManualBuildCooldown() {
-            final long cooldownMs = 60L * 60L * 1000L;
-            android.content.SharedPreferences prefs = getSharedPreferences("p0_data_build_limits", MODE_PRIVATE);
-            long last = prefs.getLong("last_manual_build_request", 0L);
-            long now = System.currentTimeMillis();
-            if (last > 0L && now - last < cooldownMs) return false;
-            prefs.edit().putLong("last_manual_build_request", now).apply();
-            return true;
-        }
-
-        @JavascriptInterface public long getManualBuildCooldownRemainingMs() {
-            android.content.SharedPreferences prefs = getSharedPreferences("p0_data_build_limits", MODE_PRIVATE);
-            long last = prefs.getLong("last_manual_build_request", 0L);
-            return Math.max(0L, 60L * 60L * 1000L - (System.currentTimeMillis() - last));
         }
 
         @JavascriptInterface public void syncDataNow(final String callbackName, final String progressCallbackName) {
@@ -383,73 +289,6 @@ public class MainActivity extends Activity {
                     }
                 });
             });
-        }
-    }
-
-    private final class NotificationsBridge {
-        @JavascriptInterface public void enable(final String callbackName) {
-            if (callbackName == null || !callbackName.matches("[A-Za-z_$][A-Za-z0-9_$]{0,63}")) return;
-            runOnUiThread(() -> {
-                if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    pendingNotificationCallback = callbackName;
-                    requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 7103);
-                } else {
-                    fetchAndRegisterFcmToken();
-                    deliverNotificationPermission(callbackName, true);
-                }
-            });
-        }
-
-        @JavascriptInterface public String getNotifications() {
-            return P0FirebaseMessagingService.getStoredNotifications(getApplicationContext());
-        }
-
-        @JavascriptInterface public void markAllRead() {
-            P0FirebaseMessagingService.markNotificationsRead(getApplicationContext());
-        }
-
-        @JavascriptInterface public void openVideo(final String videoId) {
-            if (videoId == null || !videoId.matches("[A-Za-z0-9_-]{11}")) return;
-            runOnUiThread(() -> {
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/watch?v=" + videoId));
-                    startActivity(intent);
-                } catch (Exception error) {
-                    Log.e(TAG, "Could not open notification video", error);
-                }
-            });
-        }
-    }
-
-    private String pendingNotificationCallback;
-
-    private void deliverNotificationPermission(String callbackName, boolean granted) {
-        if (webView == null || callbackName == null) return;
-        webView.evaluateJavascript("if(window." + callbackName + ")window." + callbackName + "(" + (granted ? "true" : "false") + ");", null);
-    }
-
-    private void fetchAndRegisterFcmToken() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            if (manager != null) manager.createNotificationChannel(new NotificationChannel(
-                    "penguinz0_uploads", "Penguinz0 uploads", NotificationManager.IMPORTANCE_DEFAULT));
-        }
-        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult() != null) {
-                P0FirebaseMessagingService.registerToken(getApplicationContext(), task.getResult());
-                Log.i(TAG, "FCM token available and registration requested");
-            } else { Log.e(TAG, "Unable to obtain FCM token", task.getException()); }
-        });
-    }
-
-    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 7103) {
-            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            if (granted) fetchAndRegisterFcmToken();
-            String callback = pendingNotificationCallback;
-            pendingNotificationCallback = null;
-            deliverNotificationPermission(callback, granted);
         }
     }
 
@@ -517,29 +356,10 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void onPlaybackPaused() {
             videoPlaybackActive = false;
             runOnUiThread(() -> {
-                PlaybackService.pause(MainActivity.this);
-                updatePictureInPictureParams(false);
-            });
-        }
-
-        @JavascriptInterface public void onPlaybackStopped() {
-            videoPlaybackActive = false;
-            runOnUiThread(() -> {
                 PlaybackService.stop(MainActivity.this);
                 updatePictureInPictureParams(false);
             });
         }
-    }
-
-    static void dispatchMediaCommand(String command) {
-        MainActivity activity = activeInstance;
-        if (activity == null) return;
-        activity.runOnUiThread(() -> {
-            if (activity.webView == null) return;
-            String safe = "play".equals(command) ? "play" : "pause";
-            activity.webView.evaluateJavascript(
-                    "if(window.p0MediaSessionCommand)window.p0MediaSessionCommand('" + safe + "');", null);
-        });
     }
 
     private static String quoteJs(String value) {
@@ -717,7 +537,6 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
-        if (activeInstance == this) activeInstance = null;
         modelExecutor.shutdownNow();
         dataSyncExecutor.shutdownNow();
         remoteUpdateExecutor.shutdownNow();
